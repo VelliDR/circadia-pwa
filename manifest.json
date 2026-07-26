@@ -1,0 +1,15 @@
+{
+  "name": "Circadia Caffeine PWA",
+  "short_name": "Circadia",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2935/2935413.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

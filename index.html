@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circadia // Biyoritim & Kafein Simülatörü</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>☕ Circadia</h1>
+            <span id="cyp-status" style="font-size: 0.8rem; color: var(--accent);">CYP1A2: Yükleniyor...</span>
+        </div>
+        <!-- RED-SHIFT NÖBET MODU BUTONU -->
+        <button id="btn-red-shift" class="btn-night-mode">🔴 Gece Modu</button>
+    </header>
+
+    <!-- SAĞLIK UYARISI PANKARTI -->
+    <div id="health-banner" class="health-banner" style="display: none;">
+        <div id="health-banner-title" class="banner-title"></div>
+        <div id="health-banner-msg" class="banner-msg"></div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Kandaki Aktif Kafein</h2>
+            <div id="active-caffeine" class="stat-val">0 mg</div>
+            <div id="stimulation-status" class="stat-desc">Hesaplanıyor...</div>
+        </div>
+
+        <div class="card">
+            <h2>Güvenli Uyku Zamanı</h2>
+            <div id="sleep-time" class="stat-val">--:--</div>
+            <div id="withdrawal-msg" class="stat-desc">Kandaki seviye 20mg altına inince.</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 20px;">
+        <h2>24 Saatlik Kafein Eliminasyon Eğrisi</h2>
+        <canvas id="caffeineChart"></canvas>
+    </div>
+
+    <div class="grid">
+        <!-- 1. İÇECEK KAYDI EKLENEN KART -->
+        <div class="card">
+            <h2>+ İçecek Kaydı Ekle</h2>
+            <small class="db-info-note">
+                ℹ️ Kafein miktarları %100 Arabica çekirdek ve standart demleme oranları baz alınarak hesaplanmıştır.
+            </small>
+
+            <label style="margin-top: 10px;">İçecek Seçin</label>
+            <select id="select-drink"></select>
+
+            <label>Bardak Hacmi / Boyutu</label>
+            <select id="select-cup"></select>
+
+            <button id="btn-add-drink">Tüketim Kaydet</button>
+        </div>
+
+        <!-- 2. PROFİL VE AYARLAR KARTI -->
+        <div class="card">
+            <h2>Profil & Karaciğer İndüksiyonu</h2>
+            
+            <label>Günlük Sigara Adedi (CYP1A2)</label>
+            <input type="number" id="input-cigs" value="0" min="0" max="40">
+
+            <div id="quit-smoking-container" class="quit-box" style="display: none;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="chk-quit">
+                    <span>Son 14 gün içinde sigarayı bıraktım</span>
+                </label>
+
+                <div id="quit-details" class="quit-details" style="display: none;">
+                    <div class="input-row">
+                        <div>
+                            <label>Bırakalı Kaç Gün Oldu?</label>
+                            <input type="number" id="input-days-quit" value="1" min="1" max="14">
+                        </div>
+                        <div>
+                            <label>Eski Günlük Sigara</label>
+                            <input type="number" id="input-prior-cigs" value="20" min="1" max="40">
+                        </div>
+                    </div>
+                    <div class="quit-info-card">
+                        💡 <strong>Klinik İpucu:</strong> Sigara bırakıldığında karaciğer kafeini %50 daha yavaş temizler. Yaşadığınız çarpıntı veya anksiyete nikotin yoksunluğu değil, kafein birikimi olabilir.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORAL KONTRASEPTİF SEÇENEĞİ -->
+            <label class="checkbox-label" style="margin-top: 10px; margin-bottom: 12px;">
+                <input type="checkbox" id="chk-ocp">
+                <span>Oral Kontraseptif Kullanımı (Yarı Ömür ~2x)</span>
+            </label>
+
+            <label>Kafein Tolerans Seviyesi</label>
+            <select id="select-tolerance">
+                <option value="LOW">Duyarlı / Seyrek İçici (25mg Eşik)</option>
+                <option value="MEDIUM" selected>Standart (45mg Eşik)</option>
+                <option value="HIGH">Yüksek / Nöbetçi Modu (85mg Eşik)</option>
+            </select>
+
+            <!-- VERİ YÖNETİMİ / ÇEVRİMDIŞI YEDEK PANELİ -->
+            <div class="backup-panel">
+                <label>Veri Yönetimi (Çevrimdışı Yedek)</label>
+                <div class="input-row">
+                    <button type="button" id="btn-export" class="btn-secondary">💾 Yedek İndir</button>
+                    <button type="button" id="btn-import-trigger" class="btn-secondary">📂 Yedek Yükle</button>
+                    <input type="file" id="input-import" accept=".json" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SON TÜKETİMLER KARTI -->
+    <div class="card">
+        <h2>Son Tüketimler</h2>
+        <div id="history-list">Henüz içecek eklenmedi.</div>
+    </div>
+
+    <!-- HUKUKİ SORUMLULUK REDDİ (DISCLAIMER) -->
+    <footer>
+        <p class="disclaimer-text">
+            ⚠️ <strong>Yasal Uyarı:</strong> Circadia bir farmakokinetik ve biyoritim simülasyon aracıdır. Sunulan veriler popülasyon ortalamalarına dayalı matematiksel tahminlerdir; tıbbi teşhis, tedavi veya klinik karar tavsiyesi niteliği taşımaz. Şiddetli çarpıntı veya rahatsızlık durumunda derhal bir sağlık kuruluşuna başvurunuz.
+        </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

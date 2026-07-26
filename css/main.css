@@ -1,0 +1,267 @@
+:root {
+    --bg-main: #0b0f17;
+    --bg-card: #151d2a;
+    --border: #232f45;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --primary: #10b981;
+    --danger: #ef4444;
+    --warning: #eab308;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+body { background-color: var(--bg-main); color: var(--text-main); padding: 15px; max-width: 900px; margin: 0 auto; }
+
+header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+h1 { font-size: 1.4rem; color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
+
+h2 { font-size: 1rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+select, input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
+
+button { width: 100%; background: var(--primary); color: #000; font-weight: bold; padding: 12px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+button:hover { opacity: 0.9; }
+
+.stat-val { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+.stat-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+canvas { width: 100%; display: block; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); }
+
+.history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.health-banner {
+    padding: 14px 18px;
+    border-radius: 8px;
+    border: 1px solid;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.banner-title {
+    font-size: 1.05rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.banner-msg {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    opacity: 0.95;
+}
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.history-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.history-time {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.history-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    width: auto;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+.db-info-note {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+    font-style: italic;
+    opacity: 0.8;
+}
+/* Sigara Bırakma Akıllı Kutu Stilleri */
+.quit-box {
+    margin-top: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: rgba(56, 189, 248, 0.05);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.quit-details {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+}
+
+.input-row > div {
+    flex: 1;
+}
+
+.input-row label {
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+}
+
+.quit-info-card {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: rgba(234, 179, 8, 0.08);
+    border-left: 3px solid var(--warning);
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+:root {
+    --bg-main: #0b0f17;
+    --bg-card: #151d2a;
+    --border: #232f45;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --primary: #10b981;
+    --danger: #ef4444;
+    --warning: #eab308;
+}
+
+/* RED-SHIFT GECE NÖBETİ TEMASI (OLED RED) */
+body.red-shift {
+    --bg-main: #000000;
+    --bg-card: #080000;
+    --border: #330000;
+    --text-main: #ff4d4d;
+    --text-muted: #990000;
+    --accent: #ff1a1a;
+    --primary: #cc0000;
+    --danger: #ff0000;
+    --warning: #ff6600;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+body { background-color: var(--bg-main); color: var(--text-main); padding: 15px; max-width: 900px; margin: 0 auto; transition: background-color 0.3s, color 0.3s; }
+
+header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+h1 { font-size: 1.4rem; color: var(--accent); }
+
+.btn-night-mode {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
+
+h2 { font-size: 1rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+select, input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; margin-bottom: 12px; }
+body.red-shift select, body.red-shift input { background: #050000; }
+
+button { width: 100%; background: var(--primary); color: #000; font-weight: bold; padding: 12px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+body.red-shift button { color: #ffffff; }
+
+.stat-val { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+.stat-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+canvas { width: 100%; display: block; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); }
+body.red-shift canvas { background: #030000; }
+
+.health-banner { padding: 14px 18px; border-radius: 8px; border: 1px solid; margin-bottom: 20px; }
+.banner-title { font-size: 1.05rem; font-weight: bold; margin-bottom: 4px; }
+.banner-msg { font-size: 0.88rem; line-height: 1.4; opacity: 0.95; }
+
+.history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.history-info { display: flex; align-items: center; gap: 12px; }
+.history-time { color: var(--text-muted); font-size: 0.8rem; }
+.history-actions { display: flex; align-items: center; gap: 12px; }
+
+.btn-delete { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; cursor: pointer; width: auto; }
+
+.db-info-note { display: block; margin-bottom: 10px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; font-style: italic; }
+
+.quit-box { margin-top: 8px; margin-bottom: 12px; padding: 12px; background: rgba(56, 189, 248, 0.05); border: 1px dashed var(--border); border-radius: 8px; }
+.checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.88rem; color: var(--text-main); font-weight: 500; }
+.checkbox-label input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
+.quit-details { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.input-row { display: flex; gap: 10px; }
+.input-row > div { flex: 1; }
+.quit-info-card { margin-top: 10px; padding: 8px 10px; background: rgba(234, 179, 8, 0.08); border-left: 3px solid var(--warning); border-radius: 4px; font-size: 0.78rem; color: var(--text-main); line-height: 1.4; }
+
+footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center; }
+.disclaimer-text { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; max-width: 750px; margin: 0 auto; }
+/* css/main.css dosyasının en altına ekleyin */
+
+.backup-panel {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.btn-secondary {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    font-size: 0.8rem !important;
+    padding: 8px 10px !important;
+    font-weight: normal !important;
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+}
