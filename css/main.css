@@ -1,120 +1,170 @@
+/* ==========================================================================
+   1. DEĞİŞKENLER & TEMA AYARLARI
+   ========================================================================== */
 :root {
+    /* Renk Paleti - Standart Dark Mode */
     --bg-main: #0b0f17;
-    --bg-card: #151d2a;
+    --bg-card: rgba(21, 29, 42, 0.75);
+    --bg-card-border: rgba(255, 255, 255, 0.08);
+    --bg-input: rgba(15, 23, 42, 0.65);
+    
     --border: #232f45;
+    --border-hover: rgba(56, 189, 248, 0.4);
+    
     --text-main: #f1f5f9;
     --text-muted: #94a3b8;
-    --accent: #38bdf8;
-    --primary: #10b981;
-    --danger: #ef4444;
-    --warning: #eab308;
+    
+    --accent: #38bdf8;       /* Neon Mavi */
+    --primary: #10b981;      /* Zümrüt Yeşili */
+    --danger: #ef4444;       /* Kırmızı */
+    --warning: #eab308;      /* Kehribar Sarısı */
+
+    /* Glassmorphism Efektleri */
+    --glass-blur: blur(14px);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-body { background-color: var(--bg-main); color: var(--text-main); padding: 15px; max-width: 900px; margin: 0 auto; }
-
-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-h1 { font-size: 1.4rem; color: var(--accent); }
-
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
-
-h2 { font-size: 1rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-select, input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
-
-button { width: 100%; background: var(--primary); color: #000; font-weight: bold; padding: 12px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-button:hover { opacity: 0.9; }
-
-.stat-val { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
-.stat-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
-
-canvas { width: 100%; display: block; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); }
-
-.history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-.health-banner {
-    padding: 14px 18px;
-    border-radius: 8px;
-    border: 1px solid;
-    margin-bottom: 20px;
-    transition: all 0.3s ease;
+/* RED-SHIFT GECE NÖBETİ TEMASI (OLED RED) */
+body.red-shift {
+    --bg-main: #000000;
+    --bg-card: rgba(15, 2, 2, 0.85);
+    --bg-card-border: rgba(255, 0, 0, 0.15);
+    --bg-input: rgba(10, 0, 0, 0.75);
+    
+    --border: #330000;
+    --border-hover: rgba(255, 26, 26, 0.5);
+    
+    --text-main: #ff4d4d;
+    --text-muted: #ff8080;  /* Kontrast artırıldı */
+    
+    --accent: #ff1a1a;
+    --primary: #cc0000;
+    --danger: #ff0000;
+    --warning: #ff6600;
 }
 
-.banner-title {
-    font-size: 1.05rem;
-    font-weight: bold;
-    margin-bottom: 4px;
+/* ==========================================================================
+   2. TEMEL RESET & BOUT
+   ========================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-.banner-msg {
-    font-size: 0.88rem;
-    line-height: 1.4;
-    opacity: 0.95;
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 20px 15px;
+    max-width: 900px;
+    margin: 0 auto;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.5;
 }
-.history-item {
+
+/* ==========================================================================
+   3. ÜST BİLGİ (HEADER) & BAŞLIKLAR
+   ========================================================================== */
+header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
+    padding-bottom: 15px;
     border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
+    margin-bottom: 24px;
 }
 
-.history-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
 }
 
-.history-time {
+h2 {
+    font-size: 0.88rem;
     color: var(--text-muted);
-    font-size: 0.8rem;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   4. LAYOUT & KARTLAR (GLASSMORPHISM)
+   ========================================================================== */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--bg-card-border);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition);
+}
+
+.card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================================
+   5. İNPUTLAR, SELECTLER & DOKUNMA ALANLARI
+   ========================================================================== */
+label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
     font-weight: 500;
 }
 
-.history-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.btn-delete {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    width: auto;
-    transition: all 0.2s ease;
-}
-
-.btn-delete:hover {
-    background: #ef4444;
-    color: #ffffff;
-}
-.db-info-note {
-    display: block;
-    margin-top: 10px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    line-height: 1.35;
-    font-style: italic;
-    opacity: 0.8;
-}
-/* Sigara Bırakma Akıllı Kutu Stilleri */
-.quit-box {
-    margin-top: 8px;
-    margin-bottom: 12px;
+select, input[type="number"], input[type="text"] {
+    width: 100%;
+    background: var(--bg-input);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    color: var(--text-main);
     padding: 12px;
-    background: rgba(56, 189, 248, 0.05);
-    border: 1px dashed var(--border);
     border-radius: 8px;
-    transition: all 0.3s ease;
+    margin-bottom: 14px;
+    outline: none;
+    font-size: 0.9rem;
+    transition: var(--transition);
 }
 
+select:focus, input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+select option, optgroup {
+    background-color: #0f172a;
+    color: var(--text-main);
+}
+
+body.red-shift select option, 
+body.red-shift optgroup {
+    background-color: #080000;
+}
+
+/* Checkbox Alanı */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -123,12 +173,131 @@ canvas { width: 100%; display: block; background: #0f172a; border-radius: 8px; b
     font-size: 0.88rem;
     color: var(--text-main);
     font-weight: 500;
+    user-select: none;
 }
 
 .checkbox-label input[type="checkbox"] {
-    width: auto;
-    margin: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
     cursor: pointer;
+}
+
+/* ==========================================================================
+   6. BUTONLAR
+   ========================================================================== */
+button {
+    width: 100%;
+    background: var(--primary);
+    color: #0b0f17;
+    font-weight: 700;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+button:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+body.red-shift button {
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(204, 0, 0, 0.3);
+}
+
+.btn-night-mode {
+    width: auto;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 20px;
+    box-shadow: none;
+}
+
+.btn-night-mode:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.btn-secondary {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    font-size: 0.82rem !important;
+    padding: 10px !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+}
+
+/* ==========================================================================
+   7. İSTATİSTİKLER & BİLEŞENLER
+   ========================================================================== */
+.stat-val {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+}
+
+.stat-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+canvas {
+    width: 100%;
+    display: block;
+    background: var(--bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+/* Sağlık Barları / Pankartlar */
+.health-banner {
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    backdrop-filter: var(--glass-blur);
+    transition: var(--transition);
+}
+
+.banner-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.banner-msg {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    opacity: 0.95;
+}
+
+/* Sigara Bırakma ve İpucu Kutuları */
+.quit-box {
+    margin-top: 10px;
+    margin-bottom: 14px;
+    padding: 12px;
+    background: rgba(56, 189, 248, 0.04);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
 }
 
 .quit-details {
@@ -146,122 +315,294 @@ canvas { width: 100%; display: block; background: #0f172a; border-radius: 8px; b
     flex: 1;
 }
 
-.input-row label {
-    font-size: 0.78rem;
-    margin-bottom: 4px;
-}
-
 .quit-info-card {
     margin-top: 10px;
-    padding: 8px 10px;
+    padding: 10px;
     background: rgba(234, 179, 8, 0.08);
     border-left: 3px solid var(--warning);
     border-radius: 4px;
     font-size: 0.78rem;
     color: var(--text-main);
-    line-height: 1.4;
-}
-:root {
-    --bg-main: #0b0f17;
-    --bg-card: #151d2a;
-    --border: #232f45;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --accent: #38bdf8;
-    --primary: #10b981;
-    --danger: #ef4444;
-    --warning: #eab308;
+    line-height: 1.45;
 }
 
-/* RED-SHIFT GECE NÖBETİ TEMASI (OLED RED) */
-body.red-shift {
-    --bg-main: #000000;
-    --bg-card: #080000;
-    --border: #330000;
-    --text-main: #ff4d4d;
-    --text-muted: #990000;
-    --accent: #ff1a1a;
-    --primary: #cc0000;
-    --danger: #ff0000;
-    --warning: #ff6600;
+.db-info-note {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-body { background-color: var(--bg-main); color: var(--text-main); padding: 15px; max-width: 900px; margin: 0 auto; transition: background-color 0.3s, color 0.3s; }
-
-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-h1 { font-size: 1.4rem; color: var(--accent); }
-
-.btn-night-mode {
-    width: auto;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-main);
-    border-radius: 20px;
-    cursor: pointer;
-}
-
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
-
-h2 { font-size: 1rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-select, input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; margin-bottom: 12px; }
-body.red-shift select, body.red-shift input { background: #050000; }
-
-button { width: 100%; background: var(--primary); color: #000; font-weight: bold; padding: 12px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-body.red-shift button { color: #ffffff; }
-
-.stat-val { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
-.stat-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
-
-canvas { width: 100%; display: block; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); }
-body.red-shift canvas { background: #030000; }
-
-.health-banner { padding: 14px 18px; border-radius: 8px; border: 1px solid; margin-bottom: 20px; }
-.banner-title { font-size: 1.05rem; font-weight: bold; margin-bottom: 4px; }
-.banner-msg { font-size: 0.88rem; line-height: 1.4; opacity: 0.95; }
-
-.history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-.history-info { display: flex; align-items: center; gap: 12px; }
-.history-time { color: var(--text-muted); font-size: 0.8rem; }
-.history-actions { display: flex; align-items: center; gap: 12px; }
-
-.btn-delete { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; cursor: pointer; width: auto; }
-
-.db-info-note { display: block; margin-bottom: 10px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; font-style: italic; }
-
-.quit-box { margin-top: 8px; margin-bottom: 12px; padding: 12px; background: rgba(56, 189, 248, 0.05); border: 1px dashed var(--border); border-radius: 8px; }
-.checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.88rem; color: var(--text-main); font-weight: 500; }
-.checkbox-label input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
-.quit-details { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
-.input-row { display: flex; gap: 10px; }
-.input-row > div { flex: 1; }
-.quit-info-card { margin-top: 10px; padding: 8px 10px; background: rgba(234, 179, 8, 0.08); border-left: 3px solid var(--warning); border-radius: 4px; font-size: 0.78rem; color: var(--text-main); line-height: 1.4; }
-
-footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center; }
-.disclaimer-text { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; max-width: 750px; margin: 0 auto; }
-/* css/main.css dosyasının en altına ekleyin */
 
 .backup-panel {
-    margin-top: 15px;
-    padding-top: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
     border-top: 1px solid var(--border);
 }
 
-.btn-secondary {
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-main) !important;
-    font-size: 0.8rem !important;
-    padding: 8px 10px !important;
-    font-weight: normal !important;
+/* ==========================================================================
+   8. GEÇMİŞ LİSTESİ (SEMANTİK UL/LI)
+   ========================================================================== */
+.history-list {
+    list-style: none;
+    padding: 0;
 }
 
-.btn-secondary:hover {
-    border-color: var(--accent) !important;
-    color: var(--accent) !important;
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.history-time {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.history-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Sil Butonu Mobil Touch Target Standardı (Min 36x36px) */
+.btn-delete {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 6px;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: none;
+    padding: 0;
+    transition: var(--transition);
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   9. FOOTER
+   ========================================================================== */
+footer {
+    margin-top: 30px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.disclaimer-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    max-width: 750px;
+    margin: 0 auto;
+}
+/* İKİLİ UYKU KARTI STİLLERİ */
+.sleep-dual-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 8px 0;
+}
+
+.sleep-stat-box {
+    flex: 1;
+}
+
+.sleep-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.sleep-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border);
+}
+
+.stat-val-sim {
+    color: var(--warning) !important; /* İçilirse kayacak zamanı sarı/uyarı ile vurgular */
+}
+
+body.red-shift .stat-val-sim {
+    color: #ff9900 !important;
+}
+canvas {
+    width: 100%;
+    display: block;
+    background: var(--bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    
+    /* Mobil GPU kaydırma/görünmezlik hatasını çözen katman sabitleyici */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+}
+/* ==========================================================================
+   MATERIAL 3 GLASSMORPHISM CUSTOM SELECT
+   ========================================================================== */
+
+.m3-glass-select-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 14px;
+    user-select: none;
+}
+
+/* Tetikleyici Buton (Kapalı Hal) */
+.m3-glass-trigger {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.m3-glass-trigger:hover {
+    background: rgba(15, 23, 42, 0.75);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.m3-glass-select-container.open .m3-glass-trigger {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Açılır Ok Simgesi */
+.m3-glass-arrow {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+}
+
+.m3-glass-select-container.open .m3-glass-arrow {
+    transform: rotate(180deg);
+    color: var(--accent);
+}
+
+/* Açılır Menü Paneli (Glass Panel) */
+.m3-glass-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 280px;
+    overflow-y: auto;
+    background: rgba(11, 15, 23, 0.75);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 8px;
+    z-index: 1000;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    /* Yumuşak Açılış Animasyonu */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.98);
+    transition: all 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.m3-glass-select-container.open .m3-glass-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+/* Kategori Başlıkları (Optgroup) */
+.m3-glass-group-label {
+    padding: 10px 12px 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+/* Seçenek Öğeleri */
+.m3-glass-option {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.m3-glass-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.m3-glass-option.selected {
+    background: rgba(56, 189, 248, 0.18);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* Gece Modu (Red-Shift) Özel Renkleri */
+body.red-shift .m3-glass-trigger {
+    background: rgba(15, 0, 0, 0.65);
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+body.red-shift .m3-glass-dropdown {
+    background: rgba(8, 0, 0, 0.82);
+    border-color: rgba(255, 0, 0, 0.3);
+}
+
+body.red-shift .m3-glass-option.selected {
+    background: rgba(255, 26, 26, 0.25);
+    color: var(--accent);
+}
+
+/* Custom Scrollbar */
+.m3-glass-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.m3-glass-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
 }

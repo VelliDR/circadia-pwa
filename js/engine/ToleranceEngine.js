@@ -1,3 +1,9 @@
+/**
+ * @file ToleranceEngine.js
+ * @description Kullanıcının kafein toleransı, aktif uyarılma (odak) eşiği,
+ * adenozin rebound/yoksunluk riski ve klinik toksisite seviyelerini yönetir.
+ */
+
 export const TOLERANCE_LEVELS = {
     LOW: {
         id: 'LOW',
@@ -15,7 +21,7 @@ export const TOLERANCE_LEVELS = {
         id: 'HIGH',
         name: 'Yüksek / Nöbetçi Modu (Günde 3+ Fincan)',
         thresholdMg: 85,
-        description: 'Adenozin reseptörleri artmıştır. Düşük dozlar etki etmez.'
+        description: 'Adenozin reseptör regülasyonu artmıştır. Düşük dozlar etki etmez.'
     }
 };
 
@@ -53,11 +59,16 @@ export const HEALTH_RISK_LEVELS = {
         message: 'Kandaki kafein miktarı kritik boyutta! Şiddetli aritmi, bulantı, ajitasyon ve nöbet riski mevcuttur. DERHAL kafein alımını durdurun!'
     }
 };
+
 export class ToleranceEngine {
     constructor(userToleranceKey = 'MEDIUM') {
         this.currentTolerance = TOLERANCE_LEVELS[userToleranceKey] || TOLERANCE_LEVELS.MEDIUM;
     }
 
+    /**
+     * Tolerans seviyesini günceller.
+     * @param {string} toleranceKey - 'LOW', 'MEDIUM' veya 'HIGH'
+     */
     setTolerance(toleranceKey) {
         if (TOLERANCE_LEVELS[toleranceKey]) {
             this.currentTolerance = TOLERANCE_LEVELS[toleranceKey];
@@ -65,18 +76,22 @@ export class ToleranceEngine {
     }
 
     /**
-     * Kandaki kafein miktarına göre kullanıcının aktif odak/uyarılma modunda olup olmadığını döner.
+     * Kandaki kafein miktarına göre kullanıcının aktif odak/uyarılma durumunu döner.
+     * @param {number} activeCaffeineMg - Kandaki anlık aktif kafein
      */
     getStimulationStatus(activeCaffeineMg) {
+        const threshold = this.currentTolerance.thresholdMg;
         return {
-            isStimulated: activeCaffeineMg >= this.currentTolerance.thresholdMg,
-            thresholdMg: this.currentTolerance.thresholdMg,
-            deficitMg: Math.max(0, this.currentTolerance.thresholdMg - activeCaffeineMg)
+            isStimulated: activeCaffeineMg >= threshold,
+            thresholdMg: threshold,
+            deficitMg: Math.max(0, Math.round(threshold - activeCaffeineMg))
         };
     }
 
     /**
-     * Son alımdan bu yana geçen süreye ve kandaki kafeinin sıfırlanmasına göre yoksunluk riski hesaplar.
+     * Son alımdan bu yana geçen süreye ve kafeinin çekilmesine bağlı olarak adenozin rebound riskini hesaplar.
+     * @param {number} activeCaffeineMg 
+     * @param {number} lastDrinkTimestamp 
      */
     checkWithdrawalRisk(activeCaffeineMg, lastDrinkTimestamp) {
         if (!lastDrinkTimestamp) return { risk: 'NONE', message: 'Tüketim kaydı yok.' };
@@ -97,14 +112,19 @@ export class ToleranceEngine {
 
         return { risk: 'LOW', message: 'Kandaki kafein dengeli.' };
     }
+
+    /**
+     * Toksisite eşiklerine göre klinik sağlık durumunu döndürür.
+     * @param {number} activeCaffeineMg 
+     */
     getHealthStatus(activeCaffeineMg) {
-    if (activeCaffeineMg >= 1000) {
-        return HEALTH_RISK_LEVELS.CRITICAL;
-    } else if (activeCaffeineMg >= 600) {
-        return HEALTH_RISK_LEVELS.HIGH_RISK;
-    } else if (activeCaffeineMg >= 400) {
-        return HEALTH_RISK_LEVELS.WARNING;
+        if (activeCaffeineMg >= 1000) {
+            return HEALTH_RISK_LEVELS.CRITICAL;
+        } else if (activeCaffeineMg >= 600) {
+            return HEALTH_RISK_LEVELS.HIGH_RISK;
+        } else if (activeCaffeineMg >= 400) {
+            return HEALTH_RISK_LEVELS.WARNING;
+        }
+        return HEALTH_RISK_LEVELS.SAFE;
     }
-    return HEALTH_RISK_LEVELS.SAFE;
-}
 }
