@@ -1,13 +1,26 @@
-// js/db/drinkDatabase.js
+// src/db/drinkDatabase.ts
 
-export const CUP_SIZES = {
+export interface CupSize {
+    name: string;
+    multiplier: number;
+}
+
+export const CUP_SIZES: Record<string, CupSize> = {
     ESPRESSO_SHOT: { name: 'Tek Shot (Single ~30 ml)', multiplier: 1.0 },
     SMALL: { name: 'Küçük / Standart Bardağı (~180 ml)', multiplier: 1.0 },
     MEDIUM: { name: 'Normal Kupa / Orta Boy (~250 ml)', multiplier: 1.35 },
     LARGE: { name: 'Büyük / XL Mug (~350-400 ml)', multiplier: 1.8 }
 };
 
-export const DRINK_DATABASE = [
+export interface Drink {
+    id: string;
+    name: string;
+    category: string;
+    baseCaffeineMg: number;
+    isVolumeScaled: boolean;
+}
+
+export const DRINK_DATABASE: Drink[] = [
     // --- ESPRESSO TABANLI ---
     { id: 'espresso_single', name: 'Single Shot Espresso', category: 'Espresso', baseCaffeineMg: 63, isVolumeScaled: false },
     { id: 'espresso_double', name: 'Double Shot Espresso', category: 'Espresso', baseCaffeineMg: 125, isVolumeScaled: false },

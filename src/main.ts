@@ -1,36 +1,74 @@
 /**
- * @file app.js / CircadiaApp.js
+ * @file main.ts
  * @description Circadia PWA Ana Uygulama Sınıfı. State yönetimi, event listener'lar,
  * ikili uyku simülasyonu, GlassSelect entegrasyonu ve render döngüsünü yönetir.
  */
 
-import { DRINK_DATABASE, CUP_SIZES } from './js/db/drinkDatabase.js';
-import { Pharmacokinetics } from './js/engine/Pharmacokinetics.js';
-import { ToleranceEngine } from './js/engine/ToleranceEngine.js';
-import { CanvasChart } from './js/ui/CanvasChart.js';
-import { GlassSelect } from './js/ui/GlassSelect.js';
+import { DRINK_DATABASE, CUP_SIZES } from './db/drinkDatabase';
+import { Pharmacokinetics } from './engine/Pharmacokinetics';
+import { ToleranceEngine, ToleranceKey } from './engine/ToleranceEngine';
+import { InteractiveChart } from './ui/InteractiveChart';
+import { GlassSelect } from './ui/GlassSelect';
+import { initDB, migrateFromLocalStorage, DrinkRecord } from './store/db';
+import { IDBPDatabase } from 'idb';
+import './main.css';
 
 class CircadiaApp {
+    pk: Pharmacokinetics;
+    tolerance: ToleranceEngine;
+    chart: InteractiveChart;
+    
+    drinkHistory: DrinkRecord[] = [];
+    weightKg: number = 70;
+    cigsPerDay: number = 0;
+    toleranceKey: ToleranceKey = 'MEDIUM';
+    isQuit: boolean = false;
+    daysQuit: number = 1;
+    priorCigs: number = 20;
+    isOCP: boolean = false;
+    isRedShift: boolean = false;
+
+    glassDrinkSelect?: GlassSelect;
+    glassCupSelect?: GlassSelect;
+    glassTolSelect?: GlassSelect;
+
+    db!: IDBPDatabase<any>;
+
     constructor() {
         this.pk = new Pharmacokinetics();
         this.tolerance = new ToleranceEngine();
-        this.chart = new CanvasChart('caffeineChart');
+        this.chart = new InteractiveChart('caffeineChart');
 
-        // LocalStorage State Yükleme
-        this.drinkHistory = JSON.parse(localStorage.getItem('circadia_history')) || [];
-        this.cigsPerDay = parseInt(localStorage.getItem('circadia_cigs'), 10) || 0;
-        this.toleranceKey = localStorage.getItem('circadia_tolerance') || 'MEDIUM';
+        this.start();
+    }
 
-        // Sigara Bırakma State'i
-        this.isQuit = JSON.parse(localStorage.getItem('circadia_is_quit')) || false;
-        this.daysQuit = parseInt(localStorage.getItem('circadia_days_quit'), 10) || 1;
-        this.priorCigs = parseInt(localStorage.getItem('circadia_prior_cigs'), 10) || 20;
+    async start() {
+        await migrateFromLocalStorage();
+        this.db = await initDB();
 
-        // Oral Kontraseptif & RedShift (Gece Modu) State'i
-        this.isOCP = JSON.parse(localStorage.getItem('circadia_is_ocp')) || false;
-        this.isRedShift = JSON.parse(localStorage.getItem('circadia_red_shift')) || false;
+        this.drinkHistory = await this.db.getAll('history') || [];
+        
+        const getSetting = async (key: string, defaultVal: any) => {
+            const val = await this.db.get('settings', key);
+            return val !== undefined ? val : defaultVal;
+        };
 
-        // Tolerans seviyesini ilklendir
+        this.weightKg = parseInt(await getSetting('circadia_weight', 70), 10) || 70;
+        this.cigsPerDay = parseInt(await getSetting('circadia_cigs', 0), 10) || 0;
+        this.toleranceKey = await getSetting('circadia_tolerance', 'MEDIUM') as ToleranceKey;
+        
+        const isQuitRaw = await getSetting('circadia_is_quit', false);
+        this.isQuit = typeof isQuitRaw === 'string' ? JSON.parse(isQuitRaw) : isQuitRaw;
+        
+        this.daysQuit = parseInt(await getSetting('circadia_days_quit', 1), 10) || 1;
+        this.priorCigs = parseInt(await getSetting('circadia_prior_cigs', 20), 10) || 20;
+        
+        const isOCPRaw = await getSetting('circadia_is_ocp', false);
+        this.isOCP = typeof isOCPRaw === 'string' ? JSON.parse(isOCPRaw) : isOCPRaw;
+        
+        const isRedShiftRaw = await getSetting('circadia_red_shift', false);
+        this.isRedShift = typeof isRedShiftRaw === 'string' ? JSON.parse(isRedShiftRaw) : isRedShiftRaw;
+
         this.tolerance.setTolerance(this.toleranceKey);
 
         this.requestPersistentStorage();
@@ -38,23 +76,18 @@ class CircadiaApp {
         this.applyRedShift();
         this.renderAll();
 
-        // Her dakika verileri canlı güncelle
         setInterval(() => this.renderAll(), 60000);
 
-        // Ekran genişliği değiştiğinde grafiği otomatik re-render et
         window.addEventListener('resize', () => {
-            if (this.chart) {
-                const didResize = this.chart.resizeCanvas();
-                if (didResize) {
-                    this.renderAll();
-                }
-            }
+            // Chart.js automatically handles responsive resize.
+            // No need to manually clear and re-scale canvas here anymore.
         });
     }
 
-    /**
-     * Depolama verilerinin taranıp silinmesini engeller.
-     */
+    async saveSetting(key: string, value: any) {
+        await this.db.put('settings', value, key);
+    }
+
     requestPersistentStorage() {
         if (navigator.storage && navigator.storage.persist) {
             navigator.storage.persist().then(isPersisted => {
@@ -64,8 +97,8 @@ class CircadiaApp {
     }
 
     initUI() {
-        const drinkSelect = document.getElementById('select-drink');
-        const cupSelect = document.getElementById('select-cup');
+        const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement;
+        const cupSelect = document.getElementById('select-cup') as HTMLSelectElement;
 
         // 1. İçecek Listesini Kategorili Doldur
         if (drinkSelect && drinkSelect.children.length === 0) {
@@ -94,22 +127,25 @@ class CircadiaApp {
         }
 
         // 3. Form Inputlarına Kayıtlı Değerleri Yükle
-        const inputCigs = document.getElementById('input-cigs');
-        if (inputCigs) inputCigs.value = this.cigsPerDay;
+        const inputWeight = document.getElementById('input-weight') as HTMLInputElement;
+        if (inputWeight) inputWeight.value = this.weightKg.toString();
 
-        const selectTol = document.getElementById('select-tolerance');
+        const inputCigs = document.getElementById('input-cigs') as HTMLInputElement;
+        if (inputCigs) inputCigs.value = this.cigsPerDay.toString();
+
+        const selectTol = document.getElementById('select-tolerance') as HTMLSelectElement;
         if (selectTol) selectTol.value = this.toleranceKey;
 
-        const chkQuit = document.getElementById('chk-quit');
+        const chkQuit = document.getElementById('chk-quit') as HTMLInputElement;
         if (chkQuit) chkQuit.checked = this.isQuit;
 
-        const inputDaysQuit = document.getElementById('input-days-quit');
-        if (inputDaysQuit) inputDaysQuit.value = this.daysQuit;
+        const inputDaysQuit = document.getElementById('input-days-quit') as HTMLInputElement;
+        if (inputDaysQuit) inputDaysQuit.value = this.daysQuit.toString();
 
-        const inputPriorCigs = document.getElementById('input-prior-cigs');
-        if (inputPriorCigs) inputPriorCigs.value = this.priorCigs;
+        const inputPriorCigs = document.getElementById('input-prior-cigs') as HTMLInputElement;
+        if (inputPriorCigs) inputPriorCigs.value = this.priorCigs.toString();
 
-        const chkOCP = document.getElementById('chk-ocp');
+        const chkOCP = document.getElementById('chk-ocp') as HTMLInputElement;
         if (chkOCP) chkOCP.checked = this.isOCP;
 
         this.updateQuitBoxVisibility();
@@ -117,10 +153,10 @@ class CircadiaApp {
         // 4. Native Select Elemanlarını Material 3 Glassmorphism Dropdown Bileşenlerine Dönüştür
         this.glassDrinkSelect = new GlassSelect('select-drink', () => this.renderAll());
         this.glassCupSelect = new GlassSelect('select-cup', () => this.renderAll());
-        this.glassTolSelect = new GlassSelect('select-tolerance', (val) => {
-            this.toleranceKey = val;
+        this.glassTolSelect = new GlassSelect('select-tolerance', async (val) => {
+            this.toleranceKey = val as ToleranceKey;
             this.tolerance.setTolerance(this.toleranceKey);
-            localStorage.setItem('circadia_tolerance', this.toleranceKey);
+            await this.saveSetting('circadia_tolerance', this.toleranceKey);
             this.renderAll();
         });
 
@@ -130,9 +166,9 @@ class CircadiaApp {
 
         const btnRedShift = document.getElementById('btn-red-shift');
         if (btnRedShift) {
-            btnRedShift.addEventListener('click', () => {
+            btnRedShift.addEventListener('click', async () => {
                 this.isRedShift = !this.isRedShift;
-                localStorage.setItem('circadia_red_shift', JSON.stringify(this.isRedShift));
+                await this.saveSetting('circadia_red_shift', this.isRedShift);
                 this.applyRedShift();
             });
         }
@@ -142,55 +178,70 @@ class CircadiaApp {
         if (btnExport) btnExport.addEventListener('click', () => this.exportData());
 
         const btnImportTrigger = document.getElementById('btn-import-trigger');
-        const inputImport = document.getElementById('input-import');
+        const inputImport = document.getElementById('input-import') as HTMLInputElement;
         if (btnImportTrigger && inputImport) {
             btnImportTrigger.addEventListener('click', () => inputImport.click());
             inputImport.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    this.importData(e.target.files[0]);
+                const target = e.target as HTMLInputElement;
+                if (target.files && target.files.length > 0) {
+                    this.importData(target.files[0]);
                 }
             });
         }
 
         // Form Girdi Dinleyicileri
+        if (inputWeight) {
+            inputWeight.addEventListener('input', async (e) => {
+                const target = e.target as HTMLInputElement;
+                this.weightKg = parseInt(target.value, 10) || 70;
+                await this.saveSetting('circadia_weight', this.weightKg);
+                this.renderAll();
+            });
+        }
+
         if (inputCigs) {
-            inputCigs.addEventListener('input', (e) => {
-                this.cigsPerDay = parseInt(e.target.value, 10) || 0;
-                localStorage.setItem('circadia_cigs', this.cigsPerDay);
+            inputCigs.addEventListener('input', async (e) => {
+                const target = e.target as HTMLInputElement;
+                this.cigsPerDay = parseInt(target.value, 10) || 0;
+                await this.saveSetting('circadia_cigs', this.cigsPerDay);
                 this.updateQuitBoxVisibility();
                 this.renderAll();
             });
         }
 
         if (chkQuit) {
-            chkQuit.addEventListener('change', (e) => {
-                this.isQuit = e.target.checked;
-                localStorage.setItem('circadia_is_quit', JSON.stringify(this.isQuit));
+            chkQuit.addEventListener('change', async (e) => {
+                const target = e.target as HTMLInputElement;
+                this.isQuit = target.checked;
+                await this.saveSetting('circadia_is_quit', this.isQuit);
                 this.updateQuitBoxVisibility();
                 this.renderAll();
             });
         }
 
         if (inputDaysQuit) {
-            inputDaysQuit.addEventListener('input', (e) => {
-                this.daysQuit = parseInt(e.target.value, 10) || 1;
-                localStorage.setItem('circadia_days_quit', this.daysQuit);
+            inputDaysQuit.addEventListener('input', async (e) => {
+                const target = e.target as HTMLInputElement;
+                this.daysQuit = parseInt(target.value, 10) || 1;
+                await this.saveSetting('circadia_days_quit', this.daysQuit);
                 this.renderAll();
             });
         }
 
         if (inputPriorCigs) {
-            inputPriorCigs.addEventListener('input', (e) => {
-                this.priorCigs = parseInt(e.target.value, 10) || 20;
-                localStorage.setItem('circadia_prior_cigs', this.priorCigs);
+            inputPriorCigs.addEventListener('input', async (e) => {
+                const target = e.target as HTMLInputElement;
+                this.priorCigs = parseInt(target.value, 10) || 20;
+                await this.saveSetting('circadia_prior_cigs', this.priorCigs);
                 this.renderAll();
             });
         }
 
         if (chkOCP) {
-            chkOCP.addEventListener('change', (e) => {
-                this.isOCP = e.target.checked;
-                localStorage.setItem('circadia_is_ocp', JSON.stringify(this.isOCP));
+            chkOCP.addEventListener('change', async (e) => {
+                const target = e.target as HTMLInputElement;
+                this.isOCP = target.checked;
+                await this.saveSetting('circadia_is_ocp', this.isOCP);
                 this.renderAll();
             });
         }
@@ -198,9 +249,10 @@ class CircadiaApp {
 
     exportData() {
         const payload = {
-            version: '1.4',
+            version: '2.0',
             exportDate: new Date().toISOString(),
             history: this.drinkHistory,
+            weightKg: this.weightKg,
             cigsPerDay: this.cigsPerDay,
             toleranceKey: this.toleranceKey,
             isQuit: this.isQuit,
@@ -219,20 +271,28 @@ class CircadiaApp {
         URL.revokeObjectURL(url);
     }
 
-    importData(file) {
+    importData(file: File) {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
+            if (!e.target || typeof e.target.result !== 'string') return;
             try {
                 const data = JSON.parse(e.target.result);
                 if (Array.isArray(data.history)) {
-                    localStorage.setItem('circadia_history', JSON.stringify(data.history));
-                    if (data.cigsPerDay !== undefined) localStorage.setItem('circadia_cigs', data.cigsPerDay);
-                    if (data.toleranceKey) localStorage.setItem('circadia_tolerance', data.toleranceKey);
-                    if (data.isQuit !== undefined) localStorage.setItem('circadia_is_quit', JSON.stringify(data.isQuit));
-                    if (data.daysQuit !== undefined) localStorage.setItem('circadia_days_quit', data.daysQuit);
-                    if (data.priorCigs !== undefined) localStorage.setItem('circadia_prior_cigs', data.priorCigs);
-                    if (data.isOCP !== undefined) localStorage.setItem('circadia_is_ocp', JSON.stringify(data.isOCP));
-                    if (data.isRedShift !== undefined) localStorage.setItem('circadia_red_shift', JSON.stringify(data.isRedShift));
+                    
+                    // Clear existing db
+                    await this.db.clear('history');
+                    for (const record of data.history) {
+                        await this.db.put('history', record);
+                    }
+                    
+                    if (data.weightKg !== undefined) await this.saveSetting('circadia_weight', data.weightKg);
+                    if (data.cigsPerDay !== undefined) await this.saveSetting('circadia_cigs', data.cigsPerDay);
+                    if (data.toleranceKey) await this.saveSetting('circadia_tolerance', data.toleranceKey);
+                    if (data.isQuit !== undefined) await this.saveSetting('circadia_is_quit', data.isQuit);
+                    if (data.daysQuit !== undefined) await this.saveSetting('circadia_days_quit', data.daysQuit);
+                    if (data.priorCigs !== undefined) await this.saveSetting('circadia_prior_cigs', data.priorCigs);
+                    if (data.isOCP !== undefined) await this.saveSetting('circadia_is_ocp', data.isOCP);
+                    if (data.isRedShift !== undefined) await this.saveSetting('circadia_red_shift', data.isRedShift);
 
                     alert('✅ Veriler başarıyla geri yüklendi!');
                     location.reload();
@@ -271,37 +331,54 @@ class CircadiaApp {
         }
     }
 
-    addDrink() {
-        const drinkSelect = document.getElementById('select-drink');
-        const cupSelect = document.getElementById('select-cup');
+    async addDrink() {
+        const customNameElem = document.getElementById('input-custom-name') as HTMLInputElement;
+        const customMgElem = document.getElementById('input-custom-mg') as HTMLInputElement;
 
-        if (!drinkSelect || !cupSelect) return;
+        let finalCaffeine = 0;
+        let drinkName = '';
 
-        const drinkObj = DRINK_DATABASE.find(d => d.id === drinkSelect.value);
-        const cupObj = CUP_SIZES[cupSelect.value];
-
-        if (!drinkObj || !cupObj) return;
-
-        let finalCaffeine = drinkObj.baseCaffeineMg;
-        if (drinkObj.isVolumeScaled) {
-            finalCaffeine = Math.round(finalCaffeine * cupObj.multiplier);
+        if (customNameElem && customNameElem.value.trim() !== '' && customMgElem && customMgElem.value.trim() !== '') {
+            drinkName = customNameElem.value.trim();
+            finalCaffeine = parseInt(customMgElem.value, 10) || 0;
+            customNameElem.value = '';
+            customMgElem.value = '';
+        } else {
+            const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement;
+            const cupSelect = document.getElementById('select-cup') as HTMLSelectElement;
+    
+            if (!drinkSelect || !cupSelect) return;
+    
+            const drinkObj = DRINK_DATABASE.find(d => d.id === drinkSelect.value);
+            const cupObj = CUP_SIZES[cupSelect.value];
+    
+            if (!drinkObj || !cupObj) return;
+    
+            finalCaffeine = drinkObj.baseCaffeineMg;
+            if (drinkObj.isVolumeScaled) {
+                finalCaffeine = Math.round(finalCaffeine * cupObj.multiplier);
+            }
+            drinkName = drinkObj.name;
         }
 
-        const newRecord = {
+        const stomachState = (document.querySelector('input[name="stomach-state"]:checked') as HTMLInputElement)?.value as 'empty' | 'full' || 'empty';
+
+        const newRecord: DrinkRecord = {
             id: Date.now(),
-            name: drinkObj.name,
+            name: drinkName + (stomachState === 'full' ? ' (Tok)' : ''),
             caffeineMg: finalCaffeine,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            stomachState: stomachState
         };
 
         this.drinkHistory.push(newRecord);
-        localStorage.setItem('circadia_history', JSON.stringify(this.drinkHistory));
+        await this.db.put('history', newRecord);
         this.renderAll();
     }
 
-    deleteDrink(id) {
+    async deleteDrink(id: number) {
         this.drinkHistory = this.drinkHistory.filter(item => item.id !== id);
-        localStorage.setItem('circadia_history', JSON.stringify(this.drinkHistory));
+        await this.db.delete('history', id);
         this.renderAll();
     }
 
@@ -322,7 +399,7 @@ class CircadiaApp {
         );
 
         // 1. Sağlık Uyarısı Pankartı
-        const healthStatus = this.tolerance.getHealthStatus(activeCaffeine);
+        const healthStatus = this.tolerance.getHealthStatus(activeCaffeine, this.weightKg);
         const bannerElem = document.getElementById('health-banner');
         const titleElem = document.getElementById('health-banner-title');
         const msgElem = document.getElementById('health-banner-msg');
@@ -382,8 +459,8 @@ class CircadiaApp {
             }
         }
 
-        const drinkSelect = document.getElementById('select-drink');
-        const cupSelect = document.getElementById('select-cup');
+        const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement;
+        const cupSelect = document.getElementById('select-cup') as HTMLSelectElement;
         const simSleepElem = document.getElementById('sleep-time-simulated');
 
         if (drinkSelect && cupSelect && simSleepElem) {
@@ -398,7 +475,7 @@ class CircadiaApp {
 
                 const simulatedHistory = [
                     ...this.drinkHistory,
-                    { id: 99999, caffeineMg: simCaffeine, timestamp: now }
+                    { id: 99999, name: 'Sim', caffeineMg: simCaffeine, timestamp: now }
                 ];
 
                 const simSleepTimeMs = this.pk.estimateTimeToThreshold(
@@ -482,9 +559,9 @@ class CircadiaApp {
             }).join('');
 
             historyList.querySelectorAll('.btn-delete').forEach(btn => {
-                btn.onclick = (e) => {
-                    const id = parseInt(e.currentTarget.getAttribute('data-id'), 10);
-                    this.deleteDrink(id);
+                (btn as HTMLButtonElement).onclick = async (e) => {
+                    const id = parseInt((e.currentTarget as HTMLButtonElement).getAttribute('data-id') || '0', 10);
+                    await this.deleteDrink(id);
                 };
             });
         }

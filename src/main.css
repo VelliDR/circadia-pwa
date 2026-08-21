@@ -346,6 +346,28 @@ canvas {
 .history-list {
     list-style: none;
     padding: 0;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+.history-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .history-item {
@@ -355,6 +377,7 @@ canvas {
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.9rem;
+    animation: slideInDown 0.3s ease forwards;
 }
 
 .history-item:last-child {
@@ -605,4 +628,67 @@ body.red-shift .m3-glass-option.selected {
 .m3-glass-dropdown::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 4px;
+}
+
+/* ==========================================================================
+   GLASSMORPHISM ACCORDION (Custom Drink)
+   ========================================================================== */
+
+.glass-accordion {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-accordion[open] {
+    background: rgba(15, 23, 42, 0.65);
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.glass-accordion summary {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.glass-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.glass-accordion summary::after {
+    content: '+';
+    font-size: 1.2rem;
+    font-weight: 300;
+    transition: transform 0.3s ease;
+}
+
+.glass-accordion[open] summary::after {
+    transform: rotate(45deg);
+}
+
+.glass-accordion .accordion-content {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.red-shift .glass-accordion {
+    background: rgba(15, 0, 0, 0.45);
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+body.red-shift .glass-accordion[open] {
+    background: rgba(15, 0, 0, 0.7);
+    border-color: rgba(255, 26, 26, 0.3);
 }

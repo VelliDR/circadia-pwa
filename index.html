@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b0f17" id="meta-theme-color">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2935/2935413.png">
     <title>Circadia // Biyoritim & Kafein Simülatörü</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
@@ -57,9 +56,11 @@
 
         <section class="card" style="margin-bottom: 20px;">
             <h2>24 Saatlik Kafein Eliminasyon Eğrisi</h2>
-            <canvas id="caffeineChart" aria-label="24 saatlik kafein eliminasyon grafiği" role="img">
-                <p>Grafik görüntülenemiyor. Aktif kafein takibi için metin verilerini kullanabilirsiniz.</p>
-            </canvas>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="caffeineChart" aria-label="24 saatlik kafein eliminasyon grafiği" role="img">
+                    <p>Grafik görüntülenemiyor. Aktif kafein takibi için metin verilerini kullanabilirsiniz.</p>
+                </canvas>
+            </div>
         </section>
 
         <section class="grid">
@@ -76,12 +77,38 @@
                 <label for="select-cup">Bardak Hacmi / Boyutu</label>
                 <select id="select-cup"></select>
 
+                <div class="stomach-radio-group" style="margin-bottom: 14px; display: flex; gap: 16px;">
+                    <label class="checkbox-label">
+                        <input type="radio" name="stomach-state" value="empty" checked>
+                        <span>Aç Karnına</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="radio" name="stomach-state" value="full">
+                        <span>Tok Karnına</span>
+                    </label>
+                </div>
+
+                <div class="custom-drink-accordion" style="margin-bottom: 14px;">
+                    <details class="glass-accordion">
+                        <summary>Kendi İçeceğini Ekle (Listede Yoksa)</summary>
+                        <div class="accordion-content">
+                            <label for="input-custom-name">İçecek Adı</label>
+                            <input type="text" id="input-custom-name" placeholder="Örn: Ev Yapımı Filtre">
+                            <label for="input-custom-mg">Kafein Miktarı (mg)</label>
+                            <input type="number" id="input-custom-mg" placeholder="Örn: 100">
+                        </div>
+                    </details>
+                </div>
+
                 <button id="btn-add-drink">Tüketim Kaydet</button>
             </div>
 
             <!-- PROFİL VE AYARLAR KARTI -->
             <div class="card">
                 <h2>Profil & Karaciğer İndüksiyonu</h2>
+                
+                <label for="input-weight">Vücut Ağırlığı (kg)</label>
+                <input type="number" id="input-weight" value="70" min="30" max="250">
                 
                 <label for="input-cigs">Günlük Sigara Adedi (CYP1A2)</label>
                 <input type="number" id="input-cigs" value="0" min="0" max="40">
@@ -147,6 +174,6 @@
         </p>
     </footer>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

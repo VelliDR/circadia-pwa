@@ -4,7 +4,16 @@
  * adenozin rebound/yoksunluk riski ve klinik toksisite seviyelerini yönetir.
  */
 
-export const TOLERANCE_LEVELS = {
+export type ToleranceKey = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface ToleranceLevel {
+    id: ToleranceKey;
+    name: string;
+    thresholdMg: number;
+    description: string;
+}
+
+export const TOLERANCE_LEVELS: Record<ToleranceKey, ToleranceLevel> = {
     LOW: {
         id: 'LOW',
         name: 'Duyarlı / Seyrek İçici',
@@ -25,7 +34,16 @@ export const TOLERANCE_LEVELS = {
     }
 };
 
-export const HEALTH_RISK_LEVELS = {
+export interface HealthRiskLevel {
+    level: string;
+    title: string;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    message: string;
+}
+
+export const HEALTH_RISK_LEVELS: Record<string, HealthRiskLevel> = {
     SAFE: {
         level: 'SAFE',
         title: '🟢 Güvenli Bölge',
@@ -61,15 +79,17 @@ export const HEALTH_RISK_LEVELS = {
 };
 
 export class ToleranceEngine {
-    constructor(userToleranceKey = 'MEDIUM') {
+    currentTolerance: ToleranceLevel;
+
+    constructor(userToleranceKey: ToleranceKey = 'MEDIUM') {
         this.currentTolerance = TOLERANCE_LEVELS[userToleranceKey] || TOLERANCE_LEVELS.MEDIUM;
     }
 
     /**
      * Tolerans seviyesini günceller.
-     * @param {string} toleranceKey - 'LOW', 'MEDIUM' veya 'HIGH'
+     * @param {ToleranceKey} toleranceKey - 'LOW', 'MEDIUM' veya 'HIGH'
      */
-    setTolerance(toleranceKey) {
+    setTolerance(toleranceKey: ToleranceKey) {
         if (TOLERANCE_LEVELS[toleranceKey]) {
             this.currentTolerance = TOLERANCE_LEVELS[toleranceKey];
         }
@@ -79,7 +99,7 @@ export class ToleranceEngine {
      * Kandaki kafein miktarına göre kullanıcının aktif odak/uyarılma durumunu döner.
      * @param {number} activeCaffeineMg - Kandaki anlık aktif kafein
      */
-    getStimulationStatus(activeCaffeineMg) {
+    getStimulationStatus(activeCaffeineMg: number) {
         const threshold = this.currentTolerance.thresholdMg;
         return {
             isStimulated: activeCaffeineMg >= threshold,
@@ -93,7 +113,7 @@ export class ToleranceEngine {
      * @param {number} activeCaffeineMg 
      * @param {number} lastDrinkTimestamp 
      */
-    checkWithdrawalRisk(activeCaffeineMg, lastDrinkTimestamp) {
+    checkWithdrawalRisk(activeCaffeineMg: number, lastDrinkTimestamp: number | null) {
         if (!lastDrinkTimestamp) return { risk: 'NONE', message: 'Tüketim kaydı yok.' };
 
         const hoursSinceLastDrink = (Date.now() - lastDrinkTimestamp) / (1000 * 60 * 60);
@@ -115,14 +135,17 @@ export class ToleranceEngine {
 
     /**
      * Toksisite eşiklerine göre klinik sağlık durumunu döndürür.
-     * @param {number} activeCaffeineMg 
+     * @param {number} activeCaffeineMg
+     * @param {number} weightKg
      */
-    getHealthStatus(activeCaffeineMg) {
-        if (activeCaffeineMg >= 1000) {
+    getHealthStatus(activeCaffeineMg: number, weightKg: number = 70): HealthRiskLevel {
+        const mgPerKg = activeCaffeineMg / weightKg;
+
+        if (mgPerKg >= 14.2) { // ~1000mg for 70kg
             return HEALTH_RISK_LEVELS.CRITICAL;
-        } else if (activeCaffeineMg >= 600) {
+        } else if (mgPerKg >= 8.5) { // ~600mg for 70kg
             return HEALTH_RISK_LEVELS.HIGH_RISK;
-        } else if (activeCaffeineMg >= 400) {
+        } else if (mgPerKg >= 5.7) { // ~400mg for 70kg
             return HEALTH_RISK_LEVELS.WARNING;
         }
         return HEALTH_RISK_LEVELS.SAFE;
