@@ -81,9 +81,13 @@ export class Pharmacokinetics {
         if (!drinkHistory || drinkHistory.length === 0) return 0;
 
         const halfLife = this.calculateEffectiveHalfLife(cigsPerDay, isQuit, daysQuit, priorCigs, isOCP);
+        // 48 saatten (yaklaşık 5-10 yarı ömür) eski kayıtların kalıntı etkisi <0.01 mg'dır.
+        const cutoff = targetTimestamp - (48 * 60 * 60 * 1000);
 
         return drinkHistory.reduce((total, item) => {
+            if (item.timestamp < cutoff) return total;
             const hoursPassed = (targetTimestamp - item.timestamp) / (1000 * 60 * 60);
+            if (hoursPassed < 0) return total;
             const state = item.stomachState || 'empty';
             return total + this.calculateCaffeineAtTime(item.caffeineMg, hoursPassed, halfLife, state);
         }, 0);

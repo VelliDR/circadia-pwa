@@ -25,7 +25,7 @@ export const DRINK_DATABASE: Drink[] = [
     { id: 'espresso_single', name: 'Single Shot Espresso', category: 'Espresso', baseCaffeineMg: 63, isVolumeScaled: false },
     { id: 'espresso_double', name: 'Double Shot Espresso', category: 'Espresso', baseCaffeineMg: 125, isVolumeScaled: false },
     { id: 'americano', name: 'Americano (2 Shot)', category: 'Espresso', baseCaffeineMg: 125, isVolumeScaled: true },
-    { id: 'latte_cappuccino', name: 'Latte / Cappuccino / Flat White', category: 'Espresso', baseCaffeineMg: 125, isVolumeScaled: false },
+    { id: 'latte_cappuccino', name: 'Latte / Cappuccino / Flat White', category: 'Espresso', baseCaffeineMg: 125, isVolumeScaled: true },
     { id: 'cortado_macchiato', name: 'Cortado / Espresso Macchiato', category: 'Espresso', baseCaffeineMg: 63, isVolumeScaled: false },
 
     // --- FİLTRE & MANTİK DEMLEME (MANUAL BREW) ---

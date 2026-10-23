@@ -525,6 +525,12 @@ canvas {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
+.m3-glass-trigger:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4), 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
 .m3-glass-select-container.open .m3-glass-trigger {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 8px 25px rgba(0, 0, 0, 0.4);

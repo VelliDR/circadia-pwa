@@ -1,6 +1,7 @@
 /**
  * @file GlassSelect.ts
  * @description Standard HTML Select elemanlarını Material 3 Glassmorphic custom dropdown bileşenine dönüştürür.
+ * WAI-ARIA combobox standartlarına, klavye erişilebilirliğine (Tab, Enter, Space, Up/Down, Esc) ve ekran okuyuculara uygundur.
  */
 
 export class GlassSelect {
@@ -9,45 +10,53 @@ export class GlassSelect {
     container: HTMLDivElement | null;
     trigger: HTMLDivElement | null;
     dropdown: HTMLDivElement | null;
+    private onDocClick: (e: MouseEvent) => void;
 
     constructor(selectId: string, onChangeCallback?: (value: string) => void) {
         this.nativeSelect = document.getElementById(selectId) as HTMLSelectElement;
-        if (!this.nativeSelect) {
-            this.container = null;
-            this.trigger = null;
-            this.dropdown = null;
-            return;
-        }
-
         this.onChangeCallback = onChangeCallback;
         this.container = null;
         this.trigger = null;
         this.dropdown = null;
+        this.onDocClick = (e: MouseEvent) => {
+            if (this.container && !this.container.contains(e.target as Node)) {
+                this.close();
+            }
+        };
 
-        this.init();
+        if (this.nativeSelect) {
+            this.init();
+        }
     }
 
     init() {
         if (!this.nativeSelect) return;
         
-        // Native select'i gizle
+        // Native select'i gizle ama erişilebilirlik için DOM'da tut
         this.nativeSelect.style.display = 'none';
 
         // Wrapper oluştur
         this.container = document.createElement('div');
         this.container.className = 'm3-glass-select-container';
 
-        // Trigger Butonu
+        // Trigger Butonu (Combobox)
         this.trigger = document.createElement('div');
         this.trigger.className = 'm3-glass-trigger';
+        this.trigger.tabIndex = 0;
+        this.trigger.setAttribute('role', 'combobox');
+        this.trigger.setAttribute('aria-haspopup', 'listbox');
+        this.trigger.setAttribute('aria-expanded', 'false');
+        this.trigger.setAttribute('aria-label', this.nativeSelect.getAttribute('aria-label') || 'Seçim yapın');
+        
         this.trigger.innerHTML = `
             <span class="m3-glass-label">Seçiniz</span>
-            <span class="m3-glass-arrow">▼</span>
+            <span class="m3-glass-arrow" aria-hidden="true">▼</span>
         `;
 
-        // Dropdown Paneli
+        // Dropdown Paneli (Listbox)
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'm3-glass-dropdown';
+        this.dropdown.setAttribute('role', 'listbox');
 
         this.container.appendChild(this.trigger);
         this.container.appendChild(this.dropdown);
@@ -72,6 +81,7 @@ export class GlassSelect {
                 const groupLabel = document.createElement('div');
                 groupLabel.className = 'm3-glass-group-label';
                 groupLabel.textContent = optgroup.label;
+                groupLabel.setAttribute('role', 'presentation');
                 this.dropdown!.appendChild(groupLabel);
 
                 Array.from(optgroup.children).forEach(opt => {
@@ -92,25 +102,34 @@ export class GlassSelect {
         item.className = `m3-glass-option ${opt.selected ? 'selected' : ''}`;
         item.textContent = opt.textContent;
         item.dataset.value = opt.value;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', opt.selected ? 'true' : 'false');
+        item.tabIndex = -1;
 
         item.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!this.nativeSelect) return;
-            
-            this.nativeSelect.value = opt.value;
-            
-            // Native change eventini tetikle
-            this.nativeSelect.dispatchEvent(new Event('change'));
-
-            this.updateTriggerLabel();
-            this.close();
-
-            if (this.onChangeCallback) {
-                this.onChangeCallback(opt.value);
-            }
+            this.selectValue(opt.value);
         });
 
         this.dropdown.appendChild(item);
+    }
+
+    selectValue(value: string) {
+        if (!this.nativeSelect) return;
+
+        this.nativeSelect.value = value;
+        this.nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+        this.updateTriggerLabel();
+        this.close();
+
+        if (this.onChangeCallback) {
+            this.onChangeCallback(value);
+        }
+
+        if (this.trigger) {
+            this.trigger.focus();
+        }
     }
 
     updateTriggerLabel() {
@@ -122,13 +141,16 @@ export class GlassSelect {
             labelElem.textContent = selectedOpt.textContent;
         }
 
-        // Tıklanan seçeneği highlight et
+        // Tıklanan seçeneği highlight et ve aria-selected güncelle
         const options = this.dropdown.querySelectorAll('.m3-glass-option');
         options.forEach(opt => {
-            if ((opt as HTMLElement).dataset.value === this.nativeSelect.value) {
+            const isMatch = (opt as HTMLElement).dataset.value === this.nativeSelect.value;
+            if (isMatch) {
                 opt.classList.add('selected');
+                opt.setAttribute('aria-selected', 'true');
             } else {
                 opt.classList.remove('selected');
+                opt.setAttribute('aria-selected', 'false');
             }
         });
     }
@@ -141,27 +163,80 @@ export class GlassSelect {
             this.toggle();
         });
 
-        // Dışarı tıklandığında kapat
-        document.addEventListener('click', (e) => {
-            if (this.container && !this.container.contains(e.target as Node)) {
-                this.close();
+        // Klavye Gezintisi (A11y: Space, Enter, Up, Down, Escape)
+        this.trigger.addEventListener('keydown', (e: KeyboardEvent) => {
+            const isOpen = this.container?.classList.contains('open');
+            const options = Array.from(this.dropdown?.querySelectorAll('.m3-glass-option') || []) as HTMLElement[];
+            const currentIndex = options.findIndex(opt => opt.dataset.value === this.nativeSelect.value);
+
+            switch (e.key) {
+                case 'Enter':
+                case ' ':
+                    e.preventDefault();
+                    if (!isOpen) {
+                        this.open();
+                    } else if (currentIndex >= 0 && options[currentIndex]) {
+                        this.selectValue(options[currentIndex].dataset.value || '');
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (!isOpen) {
+                        this.open();
+                    } else {
+                        const nextIndex = (currentIndex + 1) % options.length;
+                        this.selectValue(options[nextIndex].dataset.value || '');
+                    }
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (!isOpen) {
+                        this.open();
+                    } else {
+                        const prevIndex = (currentIndex - 1 + options.length) % options.length;
+                        this.selectValue(options[prevIndex].dataset.value || '');
+                    }
+                    break;
+                case 'Escape':
+                    if (isOpen) {
+                        e.preventDefault();
+                        this.close();
+                    }
+                    break;
             }
         });
+
+        // Dışarı tıklandığında kapat
+        document.removeEventListener('click', this.onDocClick);
+        document.addEventListener('click', this.onDocClick);
+    }
+
+    open() {
+        if (!this.container || !this.trigger) return;
+        // Ekrandaki diğer açık glass select'leri kapat
+        document.querySelectorAll('.m3-glass-select-container').forEach(c => {
+            if (c !== this.container) {
+                c.classList.remove('open');
+                c.querySelector('.m3-glass-trigger')?.setAttribute('aria-expanded', 'false');
+            }
+        });
+        this.container.classList.add('open');
+        this.trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    close() {
+        if (this.container && this.trigger) {
+            this.container.classList.remove('open');
+            this.trigger.setAttribute('aria-expanded', 'false');
+        }
     }
 
     toggle() {
         if (!this.container) return;
-        
-        // Ekrandaki diğer açık glass select'leri kapat
-        document.querySelectorAll('.m3-glass-select-container').forEach(c => {
-            if (c !== this.container) c.classList.remove('open');
-        });
-        this.container.classList.toggle('open');
-    }
-
-    close() {
-        if (this.container) {
-            this.container.classList.remove('open');
+        if (this.container.classList.contains('open')) {
+            this.close();
+        } else {
+            this.open();
         }
     }
 

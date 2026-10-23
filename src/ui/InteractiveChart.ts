@@ -8,10 +8,12 @@ Chart.register(annotationPlugin);
 export class InteractiveChart {
     canvas: HTMLCanvasElement | null;
     chartInstance: Chart | null;
+    currentThemeIsRedShift: boolean | null;
 
     constructor(canvasId: string) {
         this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
         this.chartInstance = null;
+        this.currentThemeIsRedShift = null;
     }
 
     render(
@@ -52,6 +54,38 @@ export class InteractiveChart {
             const val = pkEngine.getTotalActiveCaffeine(drinkHistory, t, cigsPerDay, isQuit, daysQuit, priorCigs, isOCP);
             labels.push(t);
             data.push(val);
+        }
+
+        // Eğer grafik varsa ve tema değişmediyse grafiği yok etmeden yerinde güncelle
+        if (this.chartInstance && this.currentThemeIsRedShift === isRedShift) {
+            this.chartInstance.data.labels = labels;
+            this.chartInstance.data.datasets[0].data = data;
+            
+            const scales = this.chartInstance.options.scales as any;
+            if (scales && scales.x) {
+                scales.x.min = startTime;
+                scales.x.max = endTime;
+            }
+
+            const plugins = this.chartInstance.options.plugins as any;
+            if (plugins && plugins.annotation && plugins.annotation.annotations) {
+                const ann = plugins.annotation.annotations;
+                if (ann.nowLine) {
+                    ann.nowLine.xMin = now;
+                    ann.nowLine.xMax = now;
+                }
+                if (ann.thresholdLine) {
+                    ann.thresholdLine.yMin = thresholdMg;
+                    ann.thresholdLine.yMax = thresholdMg;
+                }
+                if (ann.sleepLine) {
+                    ann.sleepLine.yMin = sleepThresholdMg;
+                    ann.sleepLine.yMax = sleepThresholdMg;
+                }
+            }
+
+            this.chartInstance.update('none');
+            return;
         }
 
         const config: any = {
@@ -183,5 +217,6 @@ export class InteractiveChart {
         }
 
         this.chartInstance = new Chart(this.canvas, config);
+        this.currentThemeIsRedShift = isRedShift;
     }
 }

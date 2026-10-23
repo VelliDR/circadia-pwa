@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b0f17" id="meta-theme-color">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2935/2935413.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     <title>Circadia // Biyoritim & Kafein Simülatörü</title>
 </head>
 <body>
@@ -26,8 +26,18 @@
 
         <section class="grid">
             <div class="card">
-                <h2>Kandaki Aktif Kafein</h2>
-                <div id="active-caffeine" class="stat-val">0 mg</div>
+                <h2>Kafein Seviyesi</h2>
+                <div class="caffeine-stat-container" style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px;">
+                    <div>
+                        <span class="sleep-label">Kandaki Aktif Yük</span>
+                        <div id="active-caffeine" class="stat-val">0 mg</div>
+                    </div>
+                    <div class="sleep-divider"></div>
+                    <div>
+                        <span class="sleep-label">Bugünkü Toplam Alım</span>
+                        <div id="daily-caffeine" class="stat-val" style="font-size: 1.5rem; color: var(--primary);">0 mg</div>
+                    </div>
+                </div>
                 <div id="stimulation-status" class="stat-desc">Hesaplanıyor...</div>
             </div>
 
@@ -50,7 +60,7 @@
         </div>
     </div>
 
-    <div id="withdrawal-msg" class="stat-desc">Kandaki kafein 20 mg altına inme tahmini.</div>
+    <div id="withdrawal-msg" class="stat-desc">Hesaplanıyor...</div>
 </div>
         </section>
 
@@ -77,6 +87,20 @@
                 <label for="select-cup">Bardak Hacmi / Boyutu</label>
                 <select id="select-cup"></select>
 
+                <label for="select-time-offset">Tüketim Zamanı</label>
+                <div class="time-select-row" style="display: flex; gap: 8px; margin-bottom: 14px;">
+                    <select id="select-time-offset" style="margin-bottom: 0;">
+                        <option value="0" selected>Şimdi (Tam Şu An)</option>
+                        <option value="15">15 dakika önce</option>
+                        <option value="30">30 dakika önce</option>
+                        <option value="60">1 saat önce</option>
+                        <option value="120">2 saat önce</option>
+                        <option value="240">4 saat önce</option>
+                        <option value="custom">Özel Saat...</option>
+                    </select>
+                    <input type="time" id="input-custom-time" style="display: none; width: auto; margin-bottom: 0;" aria-label="Özel Tüketim Saati">
+                </div>
+
                 <div class="stomach-radio-group" style="margin-bottom: 14px; display: flex; gap: 16px;">
                     <label class="checkbox-label">
                         <input type="radio" name="stomach-state" value="empty" checked>
@@ -89,13 +113,13 @@
                 </div>
 
                 <div class="custom-drink-accordion" style="margin-bottom: 14px;">
-                    <details class="glass-accordion">
+                    <details id="custom-drink-details" class="glass-accordion">
                         <summary>Kendi İçeceğini Ekle (Listede Yoksa)</summary>
                         <div class="accordion-content">
                             <label for="input-custom-name">İçecek Adı</label>
                             <input type="text" id="input-custom-name" placeholder="Örn: Ev Yapımı Filtre">
                             <label for="input-custom-mg">Kafein Miktarı (mg)</label>
-                            <input type="number" id="input-custom-mg" placeholder="Örn: 100">
+                            <input type="number" id="input-custom-mg" placeholder="Örn: 100" min="1" max="1000">
                         </div>
                     </details>
                 </div>

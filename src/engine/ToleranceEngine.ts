@@ -10,6 +10,7 @@ export interface ToleranceLevel {
     id: ToleranceKey;
     name: string;
     thresholdMg: number;
+    sleepThresholdMg: number;
     description: string;
 }
 
@@ -18,18 +19,21 @@ export const TOLERANCE_LEVELS: Record<ToleranceKey, ToleranceLevel> = {
         id: 'LOW',
         name: 'Duyarlı / Seyrek İçici',
         thresholdMg: 25,
+        sleepThresholdMg: 15,
         description: 'Düşük kafein miktarları bile güçlü uyarılma sağlar.'
     },
     MEDIUM: {
         id: 'MEDIUM',
         name: 'Standart (Günde 1-2 Fincan)',
         thresholdMg: 45,
+        sleepThresholdMg: 25,
         description: 'Ortalama tolerans seviyesi.'
     },
     HIGH: {
         id: 'HIGH',
         name: 'Yüksek / Nöbetçi Modu (Günde 3+ Fincan)',
         thresholdMg: 85,
+        sleepThresholdMg: 40,
         description: 'Adenozin reseptör regülasyonu artmıştır. Düşük dozlar etki etmez.'
     }
 };
@@ -114,7 +118,7 @@ export class ToleranceEngine {
      * @param {number} lastDrinkTimestamp 
      */
     checkWithdrawalRisk(activeCaffeineMg: number, lastDrinkTimestamp: number | null) {
-        if (!lastDrinkTimestamp) return { risk: 'NONE', message: 'Tüketim kaydı yok.' };
+        if (!lastDrinkTimestamp) return { risk: 'NONE', message: 'Henüz kayıtlı içecek yok.' };
 
         const hoursSinceLastDrink = (Date.now() - lastDrinkTimestamp) / (1000 * 60 * 60);
 
@@ -126,26 +130,33 @@ export class ToleranceEngine {
         } else if (activeCaffeineMg < 15 && hoursSinceLastDrink >= 12) {
             return {
                 risk: 'MODERATE',
-                message: '⚡ Kafein seviyesi düştü. Odak kaybı yaşanabilir.'
+                message: '⚡ Kafein çekilmesi: Odak kaybı ve hafif halsizlik hissedilebilir.'
+            };
+        } else if (activeCaffeineMg <= this.currentTolerance.sleepThresholdMg) {
+            return {
+                risk: 'LOW',
+                message: '😴 Kafein güvenli uyku eşiğinin altında. Biyoritim dinlenme moduna uygun.'
             };
         }
 
-        return { risk: 'LOW', message: 'Kandaki kafein dengeli.' };
+        return { risk: 'STIMULATED', message: `⚡ Aktif uyarılma devam ediyor (Son alımdan ${hoursSinceLastDrink.toFixed(1)} sa geçti).` };
     }
 
     /**
-     * Toksisite eşiklerine göre klinik sağlık durumunu döndürür.
+     * Toksisite ve kümülatif alım eşiklerine göre klinik sağlık durumunu döndürür.
      * @param {number} activeCaffeineMg
      * @param {number} weightKg
+     * @param {number} dailyTotalMg
      */
-    getHealthStatus(activeCaffeineMg: number, weightKg: number = 70): HealthRiskLevel {
-        const mgPerKg = activeCaffeineMg / weightKg;
+    getHealthStatus(activeCaffeineMg: number, weightKg: number = 70, dailyTotalMg: number = 0): HealthRiskLevel {
+        const safeWeight = Math.max(30, Math.min(250, weightKg));
+        const mgPerKg = activeCaffeineMg / safeWeight;
 
         if (mgPerKg >= 14.2) { // ~1000mg for 70kg
             return HEALTH_RISK_LEVELS.CRITICAL;
         } else if (mgPerKg >= 8.5) { // ~600mg for 70kg
             return HEALTH_RISK_LEVELS.HIGH_RISK;
-        } else if (mgPerKg >= 5.7) { // ~400mg for 70kg
+        } else if (dailyTotalMg >= 400 || mgPerKg >= 5.7) { // 400mg günlük limit veya ~400mg anlık
             return HEALTH_RISK_LEVELS.WARNING;
         }
         return HEALTH_RISK_LEVELS.SAFE;

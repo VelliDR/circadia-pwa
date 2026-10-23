@@ -9,7 +9,8 @@ import { Pharmacokinetics } from './engine/Pharmacokinetics';
 import { ToleranceEngine, ToleranceKey } from './engine/ToleranceEngine';
 import { InteractiveChart } from './ui/InteractiveChart';
 import { GlassSelect } from './ui/GlassSelect';
-import { initDB, migrateFromLocalStorage, DrinkRecord } from './store/db';
+import { initDB, migrateFromLocalStorage, DrinkRecord, CircadiaDB } from './store/db';
+import { escapeHtml } from './utils/security';
 import { IDBPDatabase } from 'idb';
 import './main.css';
 
@@ -32,7 +33,7 @@ class CircadiaApp {
     glassCupSelect?: GlassSelect;
     glassTolSelect?: GlassSelect;
 
-    db!: IDBPDatabase<any>;
+    db!: IDBPDatabase<CircadiaDB>;
 
     constructor() {
         this.pk = new Pharmacokinetics();
@@ -53,21 +54,28 @@ class CircadiaApp {
             return val !== undefined ? val : defaultVal;
         };
 
-        this.weightKg = parseInt(await getSetting('circadia_weight', 70), 10) || 70;
-        this.cigsPerDay = parseInt(await getSetting('circadia_cigs', 0), 10) || 0;
+        const rawWeight = parseInt(await getSetting('circadia_weight', 70), 10);
+        this.weightKg = Math.max(30, Math.min(250, isNaN(rawWeight) ? 70 : rawWeight));
+
+        const rawCigs = parseInt(await getSetting('circadia_cigs', 0), 10);
+        this.cigsPerDay = Math.max(0, Math.min(60, isNaN(rawCigs) ? 0 : rawCigs));
+
         this.toleranceKey = await getSetting('circadia_tolerance', 'MEDIUM') as ToleranceKey;
         
         const isQuitRaw = await getSetting('circadia_is_quit', false);
-        this.isQuit = typeof isQuitRaw === 'string' ? JSON.parse(isQuitRaw) : isQuitRaw;
+        this.isQuit = typeof isQuitRaw === 'string' ? JSON.parse(isQuitRaw) : Boolean(isQuitRaw);
         
-        this.daysQuit = parseInt(await getSetting('circadia_days_quit', 1), 10) || 1;
-        this.priorCigs = parseInt(await getSetting('circadia_prior_cigs', 20), 10) || 20;
+        const rawDaysQuit = parseInt(await getSetting('circadia_days_quit', 1), 10);
+        this.daysQuit = Math.max(1, Math.min(14, isNaN(rawDaysQuit) ? 1 : rawDaysQuit));
+
+        const rawPriorCigs = parseInt(await getSetting('circadia_prior_cigs', 20), 10);
+        this.priorCigs = Math.max(1, Math.min(60, isNaN(rawPriorCigs) ? 20 : rawPriorCigs));
         
         const isOCPRaw = await getSetting('circadia_is_ocp', false);
-        this.isOCP = typeof isOCPRaw === 'string' ? JSON.parse(isOCPRaw) : isOCPRaw;
+        this.isOCP = typeof isOCPRaw === 'string' ? JSON.parse(isOCPRaw) : Boolean(isOCPRaw);
         
         const isRedShiftRaw = await getSetting('circadia_red_shift', false);
-        this.isRedShift = typeof isRedShiftRaw === 'string' ? JSON.parse(isRedShiftRaw) : isRedShiftRaw;
+        this.isRedShift = typeof isRedShiftRaw === 'string' ? JSON.parse(isRedShiftRaw) : Boolean(isRedShiftRaw);
 
         this.tolerance.setTolerance(this.toleranceKey);
 
@@ -77,11 +85,6 @@ class CircadiaApp {
         this.renderAll();
 
         setInterval(() => this.renderAll(), 60000);
-
-        window.addEventListener('resize', () => {
-            // Chart.js automatically handles responsive resize.
-            // No need to manually clear and re-scale canvas here anymore.
-        });
     }
 
     async saveSetting(key: string, value: any) {
@@ -150,7 +153,26 @@ class CircadiaApp {
 
         this.updateQuitBoxVisibility();
 
-        // 4. Native Select Elemanlarını Material 3 Glassmorphism Dropdown Bileşenlerine Dönüştür
+        // 4. Zaman Seçici Kontrolleri (Şimdi / Geçmiş Zaman / Özel Saat)
+        const timeSelect = document.getElementById('select-time-offset') as HTMLSelectElement;
+        const customTimeInput = document.getElementById('input-custom-time') as HTMLInputElement;
+        if (timeSelect && customTimeInput) {
+            timeSelect.addEventListener('change', () => {
+                if (timeSelect.value === 'custom') {
+                    customTimeInput.style.display = 'block';
+                    const now = new Date();
+                    const curH = now.getHours().toString().padStart(2, '0');
+                    const curM = now.getMinutes().toString().padStart(2, '0');
+                    if (!customTimeInput.value) {
+                        customTimeInput.value = `${curH}:${curM}`;
+                    }
+                } else {
+                    customTimeInput.style.display = 'none';
+                }
+            });
+        }
+
+        // 5. Native Select Elemanlarını Material 3 Glassmorphism Dropdown Bileşenlerine Dönüştür
         this.glassDrinkSelect = new GlassSelect('select-drink', () => this.renderAll());
         this.glassCupSelect = new GlassSelect('select-cup', () => this.renderAll());
         this.glassTolSelect = new GlassSelect('select-tolerance', async (val) => {
@@ -160,7 +182,7 @@ class CircadiaApp {
             this.renderAll();
         });
 
-        // 5. Event Listeners
+        // 6. Event Listeners
         const btnAdd = document.getElementById('btn-add-drink');
         if (btnAdd) btnAdd.addEventListener('click', () => this.addDrink());
 
@@ -189,11 +211,12 @@ class CircadiaApp {
             });
         }
 
-        // Form Girdi Dinleyicileri
+        // Form Girdi Dinleyicileri (Doğrulama ve Sınır Korumalı)
         if (inputWeight) {
             inputWeight.addEventListener('input', async (e) => {
                 const target = e.target as HTMLInputElement;
-                this.weightKg = parseInt(target.value, 10) || 70;
+                const parsed = parseInt(target.value, 10);
+                this.weightKg = Math.max(30, Math.min(250, isNaN(parsed) ? 70 : parsed));
                 await this.saveSetting('circadia_weight', this.weightKg);
                 this.renderAll();
             });
@@ -202,7 +225,8 @@ class CircadiaApp {
         if (inputCigs) {
             inputCigs.addEventListener('input', async (e) => {
                 const target = e.target as HTMLInputElement;
-                this.cigsPerDay = parseInt(target.value, 10) || 0;
+                const parsed = parseInt(target.value, 10);
+                this.cigsPerDay = Math.max(0, Math.min(60, isNaN(parsed) ? 0 : parsed));
                 await this.saveSetting('circadia_cigs', this.cigsPerDay);
                 this.updateQuitBoxVisibility();
                 this.renderAll();
@@ -222,7 +246,8 @@ class CircadiaApp {
         if (inputDaysQuit) {
             inputDaysQuit.addEventListener('input', async (e) => {
                 const target = e.target as HTMLInputElement;
-                this.daysQuit = parseInt(target.value, 10) || 1;
+                const parsed = parseInt(target.value, 10);
+                this.daysQuit = Math.max(1, Math.min(14, isNaN(parsed) ? 1 : parsed));
                 await this.saveSetting('circadia_days_quit', this.daysQuit);
                 this.renderAll();
             });
@@ -231,7 +256,8 @@ class CircadiaApp {
         if (inputPriorCigs) {
             inputPriorCigs.addEventListener('input', async (e) => {
                 const target = e.target as HTMLInputElement;
-                this.priorCigs = parseInt(target.value, 10) || 20;
+                const parsed = parseInt(target.value, 10);
+                this.priorCigs = Math.max(1, Math.min(60, isNaN(parsed) ? 20 : parsed));
                 await this.saveSetting('circadia_prior_cigs', this.priorCigs);
                 this.renderAll();
             });
@@ -243,6 +269,20 @@ class CircadiaApp {
                 this.isOCP = target.checked;
                 await this.saveSetting('circadia_is_ocp', this.isOCP);
                 this.renderAll();
+            });
+        }
+
+        // Tüketim Geçmişi Silme (Event Delegation - Performans & Temizlik)
+        const historyList = document.getElementById('history-list');
+        if (historyList) {
+            historyList.addEventListener('click', async (e) => {
+                const btn = (e.target as HTMLElement).closest('.btn-delete') as HTMLButtonElement | null;
+                if (btn) {
+                    const id = parseInt(btn.getAttribute('data-id') || '0', 10);
+                    if (id) {
+                        await this.deleteDrink(id);
+                    }
+                }
             });
         }
     }
@@ -278,23 +318,49 @@ class CircadiaApp {
             try {
                 const data = JSON.parse(e.target.result);
                 if (Array.isArray(data.history)) {
-                    
-                    // Clear existing db
+                    // Güvenlik & Doğrulama: Her kaydı doğrula
+                    const validatedHistory: DrinkRecord[] = [];
+                    for (const item of data.history) {
+                        if (typeof item.id === 'number' && typeof item.caffeineMg === 'number' && typeof item.timestamp === 'number') {
+                            validatedHistory.push({
+                                id: item.id,
+                                name: String(item.name || 'İçecek').slice(0, 100),
+                                caffeineMg: Math.max(0, Math.min(2000, item.caffeineMg)),
+                                timestamp: item.timestamp,
+                                stomachState: item.stomachState === 'full' ? 'full' : 'empty'
+                            });
+                        }
+                    }
+
                     await this.db.clear('history');
-                    for (const record of data.history) {
+                    for (const record of validatedHistory) {
                         await this.db.put('history', record);
                     }
                     
-                    if (data.weightKg !== undefined) await this.saveSetting('circadia_weight', data.weightKg);
-                    if (data.cigsPerDay !== undefined) await this.saveSetting('circadia_cigs', data.cigsPerDay);
-                    if (data.toleranceKey) await this.saveSetting('circadia_tolerance', data.toleranceKey);
-                    if (data.isQuit !== undefined) await this.saveSetting('circadia_is_quit', data.isQuit);
-                    if (data.daysQuit !== undefined) await this.saveSetting('circadia_days_quit', data.daysQuit);
-                    if (data.priorCigs !== undefined) await this.saveSetting('circadia_prior_cigs', data.priorCigs);
-                    if (data.isOCP !== undefined) await this.saveSetting('circadia_is_ocp', data.isOCP);
-                    if (data.isRedShift !== undefined) await this.saveSetting('circadia_red_shift', data.isRedShift);
+                    if (typeof data.weightKg === 'number') {
+                        const safeWeight = Math.max(30, Math.min(250, data.weightKg));
+                        await this.saveSetting('circadia_weight', safeWeight);
+                    }
+                    if (typeof data.cigsPerDay === 'number') {
+                        const safeCigs = Math.max(0, Math.min(60, data.cigsPerDay));
+                        await this.saveSetting('circadia_cigs', safeCigs);
+                    }
+                    if (data.toleranceKey && ['LOW', 'MEDIUM', 'HIGH'].includes(data.toleranceKey)) {
+                        await this.saveSetting('circadia_tolerance', data.toleranceKey);
+                    }
+                    if (data.isQuit !== undefined) await this.saveSetting('circadia_is_quit', Boolean(data.isQuit));
+                    if (typeof data.daysQuit === 'number') {
+                        const safeDays = Math.max(1, Math.min(14, data.daysQuit));
+                        await this.saveSetting('circadia_days_quit', safeDays);
+                    }
+                    if (typeof data.priorCigs === 'number') {
+                        const safePrior = Math.max(1, Math.min(60, data.priorCigs));
+                        await this.saveSetting('circadia_prior_cigs', safePrior);
+                    }
+                    if (data.isOCP !== undefined) await this.saveSetting('circadia_is_ocp', Boolean(data.isOCP));
+                    if (data.isRedShift !== undefined) await this.saveSetting('circadia_red_shift', Boolean(data.isRedShift));
 
-                    alert('✅ Veriler başarıyla geri yüklendi!');
+                    alert('✅ Veriler başarıyla doğrulandı ve geri yüklendi!');
                     location.reload();
                 } else {
                     throw new Error('Geçersiz dosya biçimi.');
@@ -308,12 +374,21 @@ class CircadiaApp {
 
     applyRedShift() {
         const metaTheme = document.getElementById('meta-theme-color');
+        const btnRedShift = document.getElementById('btn-red-shift');
         if (this.isRedShift) {
             document.body.classList.add('red-shift');
             if (metaTheme) metaTheme.setAttribute('content', '#000000');
+            if (btnRedShift) {
+                btnRedShift.textContent = '☀️ Normal Mod';
+                btnRedShift.setAttribute('aria-pressed', 'true');
+            }
         } else {
             document.body.classList.remove('red-shift');
             if (metaTheme) metaTheme.setAttribute('content', '#0b0f17');
+            if (btnRedShift) {
+                btnRedShift.textContent = '🔴 Gece Modu';
+                btnRedShift.setAttribute('aria-pressed', 'false');
+            }
         }
         this.renderAll();
     }
@@ -331,18 +406,54 @@ class CircadiaApp {
         }
     }
 
+    formatSleepTime(timeMs: number, now: number): string {
+        if (timeMs <= now) return 'Şu An';
+        const maxTime = now + (36 * 60 * 60 * 1000);
+        if (timeMs >= maxTime - 60000) return '> 36 Saat';
+
+        const d = new Date(timeMs);
+        const h = d.getHours().toString().padStart(2, '0');
+        const m = d.getMinutes().toString().padStart(2, '0');
+
+        const nowDate = new Date(now);
+        const isSameDay = d.toDateString() === nowDate.toDateString();
+        
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const isTomorrow = d.toDateString() === tomorrow.toDateString();
+
+        if (isSameDay) return `${h}:${m}`;
+        if (isTomorrow) return `Yarın ${h}:${m}`;
+        return `${d.getDate()}/${d.getMonth() + 1} ${h}:${m}`;
+    }
+
     async addDrink() {
+        const accordion = document.getElementById('custom-drink-details') as HTMLDetailsElement;
         const customNameElem = document.getElementById('input-custom-name') as HTMLInputElement;
         const customMgElem = document.getElementById('input-custom-mg') as HTMLInputElement;
 
         let finalCaffeine = 0;
         let drinkName = '';
 
-        if (customNameElem && customNameElem.value.trim() !== '' && customMgElem && customMgElem.value.trim() !== '') {
+        const hasCustomName = customNameElem && customNameElem.value.trim() !== '';
+        const hasCustomMg = customMgElem && customMgElem.value.trim() !== '';
+
+        // Özel içecek akordiyonu açıksa ve alanlardan biri doluysa doğrula
+        if (accordion && accordion.open && (hasCustomName || hasCustomMg)) {
+            if (!hasCustomName || !hasCustomMg) {
+                alert('⚠️ Lütfen hem özel içeceğin adını hem de kafein miktarını (mg) eksiksiz giriniz.');
+                return;
+            }
+            const mgVal = parseInt(customMgElem.value, 10);
+            if (isNaN(mgVal) || mgVal <= 0 || mgVal > 1500) {
+                alert('⚠️ Kafein miktarı 1 ile 1500 mg arasında geçerli bir sayı olmalıdır.');
+                return;
+            }
             drinkName = customNameElem.value.trim();
-            finalCaffeine = parseInt(customMgElem.value, 10) || 0;
+            finalCaffeine = mgVal;
             customNameElem.value = '';
             customMgElem.value = '';
+            accordion.open = false;
         } else {
             const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement;
             const cupSelect = document.getElementById('select-cup') as HTMLSelectElement;
@@ -361,13 +472,34 @@ class CircadiaApp {
             drinkName = drinkObj.name;
         }
 
+        // Tüketim Zamanı Hesabı
+        const timeSelect = document.getElementById('select-time-offset') as HTMLSelectElement;
+        const customTimeInput = document.getElementById('input-custom-time') as HTMLInputElement;
+
+        let recordTimestamp = Date.now();
+        if (timeSelect) {
+            if (timeSelect.value === 'custom' && customTimeInput && customTimeInput.value) {
+                const [hours, minutes] = customTimeInput.value.split(':').map(Number);
+                const customDate = new Date();
+                customDate.setHours(hours, minutes, 0, 0);
+                // Eğer girilen saat şu andan ilerideyse dünün o saatidir
+                if (customDate.getTime() > Date.now()) {
+                    customDate.setDate(customDate.getDate() - 1);
+                }
+                recordTimestamp = customDate.getTime();
+            } else {
+                const minsOffset = parseInt(timeSelect.value, 10) || 0;
+                recordTimestamp = Date.now() - (minsOffset * 60 * 1000);
+            }
+        }
+
         const stomachState = (document.querySelector('input[name="stomach-state"]:checked') as HTMLInputElement)?.value as 'empty' | 'full' || 'empty';
 
         const newRecord: DrinkRecord = {
             id: Date.now(),
             name: drinkName + (stomachState === 'full' ? ' (Tok)' : ''),
             caffeineMg: finalCaffeine,
-            timestamp: Date.now(),
+            timestamp: recordTimestamp,
             stomachState: stomachState
         };
 
@@ -385,7 +517,20 @@ class CircadiaApp {
     renderAll() {
         const now = Date.now();
 
-        // Aktif Kafein Yükü
+        // 1. Bugünkü Toplam Kafein Alımı (Kümülatif Doz)
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const dailyTotalMg = this.drinkHistory
+            .filter(d => d.timestamp >= startOfDay.getTime())
+            .reduce((sum, d) => sum + d.caffeineMg, 0);
+
+        const dailyElem = document.getElementById('daily-caffeine');
+        if (dailyElem) {
+            dailyElem.textContent = `${dailyTotalMg} mg`;
+            dailyElem.style.color = dailyTotalMg >= 400 ? 'var(--warning)' : 'var(--primary)';
+        }
+
+        // 2. Anlık Aktif Kafein Yükü (Kinetik)
         const activeCaffeine = Math.round(
             this.pk.getTotalActiveCaffeine(
                 this.drinkHistory,
@@ -398,8 +543,8 @@ class CircadiaApp {
             )
         );
 
-        // 1. Sağlık Uyarısı Pankartı
-        const healthStatus = this.tolerance.getHealthStatus(activeCaffeine, this.weightKg);
+        // 3. Sağlık Uyarısı Pankartı (Akut Toksisite + Günlük Limit)
+        const healthStatus = this.tolerance.getHealthStatus(activeCaffeine, this.weightKg, dailyTotalMg);
         const bannerElem = document.getElementById('health-banner');
         const titleElem = document.getElementById('health-banner-title');
         const msgElem = document.getElementById('health-banner-msg');
@@ -424,7 +569,7 @@ class CircadiaApp {
             }
         }
 
-        // 2. Metrikler & Uyarılma Durumu
+        // 4. Metrikler & Uyarılma Durumu
         const activeElem = document.getElementById('active-caffeine');
         if (activeElem) activeElem.textContent = `${activeCaffeine} mg`;
 
@@ -436,10 +581,12 @@ class CircadiaApp {
                 : `🌙 Eşik Altında (Odak için +${stimStatus.deficitMg} mg gerekli)`;
         }
 
-        // 3. İkili Uyku Tahmini (A: Mevcut vs B: Seçili İçecek İçilirse)
+        // 5. İkili Uyku Tahmini (Dinamik Tolerans Uyku Eşiği ile)
+        const sleepThreshold = this.tolerance.currentTolerance.sleepThresholdMg;
+
         const sleepTimeMs = this.pk.estimateTimeToThreshold(
             this.drinkHistory,
-            20,
+            sleepThreshold,
             this.cigsPerDay,
             this.isQuit,
             this.daysQuit,
@@ -449,14 +596,7 @@ class CircadiaApp {
 
         const sleepElem = document.getElementById('sleep-time');
         if (sleepElem) {
-            if (sleepTimeMs <= now) {
-                sleepElem.textContent = 'Şu An';
-            } else {
-                const sleepDate = new Date(sleepTimeMs);
-                const h = sleepDate.getHours().toString().padStart(2, '0');
-                const m = sleepDate.getMinutes().toString().padStart(2, '0');
-                sleepElem.textContent = `${h}:${m}`;
-            }
+            sleepElem.textContent = this.formatSleepTime(sleepTimeMs, now);
         }
 
         const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement;
@@ -480,7 +620,7 @@ class CircadiaApp {
 
                 const simSleepTimeMs = this.pk.estimateTimeToThreshold(
                     simulatedHistory,
-                    20,
+                    sleepThreshold,
                     this.cigsPerDay,
                     this.isQuit,
                     this.daysQuit,
@@ -488,18 +628,21 @@ class CircadiaApp {
                     this.isOCP
                 );
 
-                if (simSleepTimeMs <= now) {
-                    simSleepElem.textContent = 'Şu An';
-                } else {
-                    const simSleepDate = new Date(simSleepTimeMs);
-                    const simHours = simSleepDate.getHours().toString().padStart(2, '0');
-                    const simMinutes = simSleepDate.getMinutes().toString().padStart(2, '0');
-                    simSleepElem.textContent = `${simHours}:${simMinutes}`;
-                }
+                simSleepElem.textContent = this.formatSleepTime(simSleepTimeMs, now);
             }
         }
 
-        // 4. CYP1A2 Enzim Durum Yazısı
+        // 6. Adenozin Rebound & Yoksunluk Uyarısı
+        const lastDrink = this.drinkHistory.length > 0 
+            ? [...this.drinkHistory].sort((a, b) => b.timestamp - a.timestamp)[0]
+            : null;
+        const withdrawalInfo = this.tolerance.checkWithdrawalRisk(activeCaffeine, lastDrink ? lastDrink.timestamp : null);
+        const withdrawalElem = document.getElementById('withdrawal-msg');
+        if (withdrawalElem) {
+            withdrawalElem.textContent = withdrawalInfo.message;
+        }
+
+        // 7. CYP1A2 Enzim Durum Yazısı
         const effHalfLife = this.pk.calculateEffectiveHalfLife(
             this.cigsPerDay,
             this.isQuit,
@@ -518,14 +661,14 @@ class CircadiaApp {
             }
         }
 
-        // 5. Canvas Grafiği Çizimi
+        // 8. Canvas Grafiği Çizimi
         if (this.chart) {
             this.chart.render(
                 this.pk,
                 this.drinkHistory,
                 this.cigsPerDay,
                 this.tolerance.currentTolerance.thresholdMg,
-                20,
+                sleepThreshold,
                 this.isQuit,
                 this.daysQuit,
                 this.priorCigs,
@@ -533,7 +676,7 @@ class CircadiaApp {
             );
         }
 
-        // 6. Tüketim Geçmişi Listesi
+        // 9. Tüketim Geçmişi Listesi (XSS Güvenli & Kaçışlı)
         const historyList = document.getElementById('history-list');
         if (historyList) {
             if (this.drinkHistory.length === 0) {
@@ -544,26 +687,20 @@ class CircadiaApp {
             historyList.innerHTML = [...this.drinkHistory].reverse().map(item => {
                 const d = new Date(item.timestamp);
                 const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                const safeName = escapeHtml(item.name);
                 return `
                     <li class="history-item">
                         <div class="history-info">
                             <span class="history-time">${timeStr}</span>
-                            <span>${item.name}</span>
+                            <span>${safeName}</span>
                         </div>
                         <div class="history-actions">
                             <strong>+${item.caffeineMg} mg</strong>
-                            <button class="btn-delete" data-id="${item.id}" title="Kaydı Sil" aria-label="${item.name} kaydını sil">✕</button>
+                            <button class="btn-delete" data-id="${item.id}" title="Kaydı Sil" aria-label="${safeName} kaydını sil">✕</button>
                         </div>
                     </li>
                 `;
             }).join('');
-
-            historyList.querySelectorAll('.btn-delete').forEach(btn => {
-                (btn as HTMLButtonElement).onclick = async (e) => {
-                    const id = parseInt((e.currentTarget as HTMLButtonElement).getAttribute('data-id') || '0', 10);
-                    await this.deleteDrink(id);
-                };
-            });
         }
     }
 }

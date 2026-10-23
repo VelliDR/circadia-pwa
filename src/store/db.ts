@@ -9,7 +9,7 @@ export interface DrinkRecord {
     stomachState?: 'empty' | 'full'; // Yeni eklenen özellik
 }
 
-interface CircadiaDB extends DBSchema {
+export interface CircadiaDB extends DBSchema {
     history: {
         key: number;
         value: DrinkRecord;

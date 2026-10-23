@@ -20,10 +20,13 @@ Sıradan sayaçların aksine; sigara kullanımı, sigara bırakma süreci, oral 
 
 ## 🧮 Matematiksel & Farmakokinetik Model
 
-### 1. Eliminasyon Kinetiği ($30\text{ dk}$ Emilim Sonrası)
-$$C(t) = C_0 \cdot e^{-k_e \cdot (t - t_{\max})}$$
+### 1. Emilim & Eliminasyon Kinetiği (Bateman Fonksiyonu)
+$$C(t) = D \cdot \frac{k_a}{k_a - k_e} \cdot \left( e^{-k_e \cdot t} - e^{-k_a \cdot t} \right)$$
 
-Burada $k_e$ eliminasyon hız sabitidir:
+Burada:
+- $D$: Tüketilen kafein dozu ($mg$)
+- $k_a$: Gastrointestinal emilim hız sabiti (Aç karnına: $5.0\text{ sa}^{-1}$, Tok karnına: $2.0\text{ sa}^{-1}$)
+- $k_e$: Eliminasyon hız sabiti:
 $$k_e = \frac{\ln(2)}{t_{1/2\_etkin}}$$
 
 ### 2. Sigara Bırakma De-indüksiyonu ($0 - 14\text{ Gün}$)
@@ -33,10 +36,10 @@ $$t_{1/2}(d) = t_{1/2\_sigara} + \left( (t_{1/2\_baz} - t_{1/2\_sigara}) \cdot \
 
 ## 🛠️ Teknolojik Mimari
 
-- **Frontend:** Vanilla JavaScript (ES6 Modules)
-- **Çizim Motoru:** HTML5 Canvas API (Dinamik Y-skalası & Gradient Area Chart)
-- **Stil:** Pure CSS3 (CSS Variables & Responsive Grid)
-- **PWA / Offline:** Service Worker (`sw.js`) & Web App Manifest
+- **Frontend:** TypeScript + Modern Web Components / Glassmorphism UI
+- **Grafik Motoru:** Chart.js 4 + chartjs-plugin-annotation (Reaktif Update Döngüsü)
+- **Depolama:** IndexedDB (`idb`) + Persistent Storage API
+- **PWA & Offline:** Vite + `vite-plugin-pwa` + Workbox Service Worker
 
 ---
 ⚠️ Yasal Uyarı
