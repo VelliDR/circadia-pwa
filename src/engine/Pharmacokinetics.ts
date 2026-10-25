@@ -1,35 +1,50 @@
 /**
- * @file Pharmacokinetics.js
- * @description Kafein emilimi (Bateman Kinetiği), eliminasyonu, CYP1A2 enzim indüksiyonu/inhibisyonu 
- * ve tolerans/sağlık analizi motoru.
+ * @file Pharmacokinetics.ts
+ * @description Kafein emilimi (Bateman Kinetiği), sistemik vücut yükü (mg), plazma konsantrasyonu (mg/L),
+ * üstel CYP1A2 enzim indüksiyonu/de-indüksiyonu ve uyku eşiği simülasyon motoru.
  */
 
 import { DrinkRecord } from '../store/db';
+
+export const CAFFEINE_VD_L_PER_KG = 0.65; // Dağılım hacmi Vd ≈ 0.6–0.7 L/kg (Blanchard & Sawers 1983)
 
 export class Pharmacokinetics {
     baseHalfLife: number;
 
     /**
-     * @param {number} baseHalfLifeHours - Baz yarılanma ömrü (Varsayılan: 5.0 saat)
+     * @param baseHalfLifeHours - Baz yarılanma ömrü (Varsayılan: 5.0 saat)
      */
     constructor(baseHalfLifeHours: number = 5.0) {
         this.baseHalfLife = baseHalfLifeHours;
     }
 
     /**
-     * CYP1A2 Enzim modülasyonuna göre dinamik yarılanma ömrünü hesaplar.
+     * CYP1A2 enzim modülasyonuna göre dinamik yarılanma ömrünü hesaplar.
+     * Sigara bırakma sürecinde üstel (exponential) CYP1A2 turnover modeli kullanılır
+     * (Faber & Fuhr 2004: t1/2_deindüksiyon ≈ 38.6 saat, τ ≈ 2.3 gün).
      */
-    calculateEffectiveHalfLife(cigsPerDay: number = 0, isQuitSmoking: boolean = false, daysQuit: number = 0, priorCigs: number = 20, isOCP: boolean = false): number {
+    calculateEffectiveHalfLife(
+        cigsPerDay: number = 0,
+        isQuitSmoking: boolean = false,
+        daysQuit: number = 0,
+        priorCigs: number = 20,
+        isOCP: boolean = false,
+        isPregnant: boolean = false
+    ): number {
         let halfLife = this.baseHalfLife;
 
-        // 1. Sigara Bırakma Durumu (Enzim De-indüksiyonu / 14 Günlük Adaptasyon)
+        // 1. Sigara Bırakma Durumu (Üstel Enzim De-indüksiyonu / 14 Günlük Pencere)
         if (cigsPerDay === 0 && isQuitSmoking && daysQuit < 14) {
             const cappedPrior = Math.min(Math.max(1, priorCigs), 30);
-            const priorInduction = 1 + (0.04 * cappedPrior);
-            const inducedHalfLife = this.baseHalfLife / priorInduction;
+            const initialInduction = 1 + (0.04 * cappedPrior);
+            const clampedDays = Math.min(Math.max(0, daysQuit), 14);
 
-            const progress = Math.min(Math.max(0, daysQuit), 14) / 14;
-            halfLife = inducedHalfLife + ((this.baseHalfLife - inducedHalfLife) * progress);
+            const tauDays = 2.3; // τ = 38.6 sa / (24 * ln2) ≈ 2.32 gün
+            const expMax = Math.exp(-14 / tauDays);
+            const decayFraction = (Math.exp(-clampedDays / tauDays) - expMax) / (1 - expMax);
+            const currentInduction = 1 + ((initialInduction - 1) * decayFraction);
+
+            halfLife = this.baseHalfLife / currentInduction;
         } else {
             // 2. Aktif Sigara İçme / İçmeme Durumu
             const cappedCigs = Math.min(Math.max(0, cigsPerDay), 30);
@@ -37,91 +52,138 @@ export class Pharmacokinetics {
             halfLife = this.baseHalfLife / inductionFactor;
         }
 
-        // 3. Oral Kontraseptif Etkisi (CYP1A2 İnhibisyonu - Yarı ömrü ~2x uzatır)
+        // 3. Oral Kontraseptif veya Gebelik Etkisi (CYP1A2 İnhibisyonu)
         if (isOCP) {
             halfLife *= 2.0;
         }
+        if (isPregnant) {
+            halfLife *= isOCP ? 1.25 : 2.0;
+        }
 
-        return halfLife;
+        return Math.min(halfLife, 18.0);
     }
 
     getEliminationRate(halfLife: number): number {
-        return Math.LN2 / halfLife;
+        return Math.LN2 / Math.max(0.1, halfLife);
     }
 
     /**
-     * Bateman Fonksiyonu (1st Order Absorption & Elimination Model)
-     * Emilim ve eliminasyonu eşzamanlı simüle ederek $t_{max}$ noktasında doğal pürüzsüz tepe çizer.
-     * 
-     * @param {number} initialDoseMg - Tüketilen miktar (mg)
-     * @param {number} hoursPassed - Geçen süre (saat)
-     * @param {number} halfLife - Etkin yarı ömür (saat)
-     * @param {'empty' | 'full'} stomachState - Mide doluluğu
+     * Analitik doruk konsantrasyon süresi t_max (dakika).
+     * t_max = ln(ka / ke) / (ka - ke)
+     * Aç karnına (ka=5 sa^-1, t1/2=5 sa) ≈ 44 dk; Tok karnına (ka=2 sa^-1) ≈ 86 dk.
      */
-    calculateCaffeineAtTime(initialDoseMg: number, hoursPassed: number, halfLife: number, stomachState: 'empty' | 'full' = 'empty'): number {
-        if (hoursPassed < 0) return 0;
+    getTmaxMinutes(halfLife: number = this.baseHalfLife, stomachState: 'empty' | 'full' = 'empty'): number {
+        const ke = this.getEliminationRate(halfLife);
+        const ka = stomachState === 'full' ? 2.0 : 5.0;
+        if (Math.abs(ka - ke) < 0.0001) {
+            return (1 / ke) * 60;
+        }
+        return (Math.log(ka / ke) / (ka - ke)) * 60;
+    }
 
-        const ke = this.getEliminationRate(halfLife); // Eliminasyon sabiti
-        const ka = stomachState === 'full' ? 2.0 : 5.0; // Emilim hızı sabiti (Tok: yavaş, Aç: hızlı)
+    /**
+     * Bateman Fonksiyonu (1. Derece Emilim ve Eliminasyon Modeli).
+     * Çıktı: Vücuttaki toplam aktif kafein miktarı A(t) (mg).
+     */
+    calculateCaffeineAtTime(
+        initialDoseMg: number,
+        hoursPassed: number,
+        halfLife: number,
+        stomachState: 'empty' | 'full' = 'empty'
+    ): number {
+        if (hoursPassed < 0 || initialDoseMg <= 0) return 0;
 
-        // Emilim sabiti ile eliminasyon sabiti çakışması durumu (Singularity Guard)
+        const ke = this.getEliminationRate(halfLife);
+        const ka = stomachState === 'full' ? 2.0 : 5.0;
+
         if (Math.abs(ka - ke) < 0.0001) {
             return initialDoseMg * ka * hoursPassed * Math.exp(-ke * hoursPassed);
         }
 
-        // Bateman Denklemi: C(t) = D * (ka / (ka - ke)) * (e^(-ke*t) - e^(-ka*t))
-        const activeConcentration = initialDoseMg * (ka / (ka - ke)) * (Math.exp(-ke * hoursPassed) - Math.exp(-ka * hoursPassed));
-        return Math.max(0, activeConcentration);
+        const activeBodyLoadMg = initialDoseMg * (ka / (ka - ke)) * (Math.exp(-ke * hoursPassed) - Math.exp(-ka * hoursPassed));
+        return Math.max(0, activeBodyLoadMg);
     }
 
     /**
-     * Hedef zaman damgasındaki toplam aktif kafein yükünü (Süperpozisyon) hesaplar.
+     * Vücuttaki aktif kafein yükünden (mg) tahmini plazma konsantrasyonunu (mg/L) hesaplar.
+     * C_p = A / (Vd * W)
      */
-    getTotalActiveCaffeine(drinkHistory: DrinkRecord[], targetTimestamp: number, cigsPerDay: number = 0, isQuit: boolean = false, daysQuit: number = 0, priorCigs: number = 20, isOCP: boolean = false): number {
+    calculatePlasmaConcentrationMgL(
+        activeBodyLoadMg: number,
+        weightKg: number = 70,
+        vdLPerKg: number = CAFFEINE_VD_L_PER_KG
+    ): number {
+        if (activeBodyLoadMg <= 0) return 0;
+        const safeWeight = Math.max(30, Math.min(250, weightKg));
+        return activeBodyLoadMg / (vdLPerKg * safeWeight);
+    }
+
+    /**
+     * Hedef zaman damgasındaki toplam aktif vücut kafein yükünü (Süperpozisyon, mg) hesaplar.
+     * Kayıt üzerinde `effectiveHalfLife` varsa geçmiş eğriyi sabit tutmak için onu kullanır.
+     */
+    getTotalActiveCaffeine(
+        drinkHistory: DrinkRecord[],
+        targetTimestamp: number,
+        cigsPerDay: number = 0,
+        isQuit: boolean = false,
+        daysQuit: number = 0,
+        priorCigs: number = 20,
+        isOCP: boolean = false,
+        isPregnant: boolean = false
+    ): number {
         if (!drinkHistory || drinkHistory.length === 0) return 0;
 
-        const halfLife = this.calculateEffectiveHalfLife(cigsPerDay, isQuit, daysQuit, priorCigs, isOCP);
-        // 48 saatten (yaklaşık 5-10 yarı ömür) eski kayıtların kalıntı etkisi <0.01 mg'dır.
-        const cutoff = targetTimestamp - (48 * 60 * 60 * 1000);
+        const fallbackHalfLife = this.calculateEffectiveHalfLife(cigsPerDay, isQuit, daysQuit, priorCigs, isOCP, isPregnant);
+        const cutoff = targetTimestamp - (72 * 60 * 60 * 1000); // Uzamış yarı ömürler için 72 saatlik pencere
 
         return drinkHistory.reduce((total, item) => {
-            if (item.timestamp < cutoff) return total;
+            if (item.caffeineMg <= 0 || item.timestamp < cutoff) return total;
             const hoursPassed = (targetTimestamp - item.timestamp) / (1000 * 60 * 60);
             if (hoursPassed < 0) return total;
             const state = item.stomachState || 'empty';
-            return total + this.calculateCaffeineAtTime(item.caffeineMg, hoursPassed, halfLife, state);
+            const recordHalfLife = (item.effectiveHalfLife && item.effectiveHalfLife > 0)
+                ? item.effectiveHalfLife
+                : fallbackHalfLife;
+            return total + this.calculateCaffeineAtTime(item.caffeineMg, hoursPassed, recordHalfLife, state);
         }, 0);
     }
 
     /**
-     * Kandaki kafein seviyesinin hedeflenen güvenli uyku eşiğine (20 mg) ineceği zamanı hesaplar.
-     * Emilim aşamasındaki taze içeceklerin pik yapmasını bekleyen 2 aşamalı simülatör.
+     * Aktif vücut yükünün hedeflenen güvenli uyku eşiğine (varsayılan: 25 mg) ineceği zamanı hesaplar.
      */
-    estimateTimeToThreshold(drinkHistory: DrinkRecord[], thresholdMg: number = 20, cigsPerDay: number = 0, isQuit: boolean = false, daysQuit: number = 0, priorCigs: number = 20, isOCP: boolean = false): number {
-        const now = Date.now();
-        const maxStepTime = now + (36 * 60 * 60 * 1000); // Max 36 saat ileriye bak
-        const stepIntervalMs = 5 * 60 * 1000;            // 5 dakikalık simülasyon adımı
+    estimateTimeToThreshold(
+        drinkHistory: DrinkRecord[],
+        thresholdMg: number = 25,
+        cigsPerDay: number = 0,
+        isQuit: boolean = false,
+        daysQuit: number = 0,
+        priorCigs: number = 20,
+        isOCP: boolean = false,
+        isPregnant: boolean = false,
+        referenceNow: number = Date.now()
+    ): number {
+        const now = referenceNow;
+        const maxStepTime = now + (36 * 60 * 60 * 1000);
+        const stepIntervalMs = 5 * 60 * 1000;
 
         let maxFutureActive = 0;
         let peakTime = now;
 
-        // 1. Aşama: Önümüzdeki 4 saat içindeki maksimum kafein zirvesini (Peak) bul
         for (let t = now; t <= now + (4 * 60 * 60 * 1000); t += stepIntervalMs) {
-            const val = this.getTotalActiveCaffeine(drinkHistory, t, cigsPerDay, isQuit, daysQuit, priorCigs, isOCP);
+            const val = this.getTotalActiveCaffeine(drinkHistory, t, cigsPerDay, isQuit, daysQuit, priorCigs, isOCP, isPregnant);
             if (val > maxFutureActive) {
                 maxFutureActive = val;
                 peakTime = t;
             }
         }
 
-        // Gelecekteki maksimum kafein bile eşik altındaysa ŞU AN uyumak güvenlidir
         if (maxFutureActive <= thresholdMg) {
             return now;
         }
 
-        // 2. Aşama: Zirve noktasından (peakTime) itibaren kafeinin eşik altına indiği anı ara
         for (let t = peakTime; t <= maxStepTime; t += stepIntervalMs) {
-            const val = this.getTotalActiveCaffeine(drinkHistory, t, cigsPerDay, isQuit, daysQuit, priorCigs, isOCP);
+            const val = this.getTotalActiveCaffeine(drinkHistory, t, cigsPerDay, isQuit, daysQuit, priorCigs, isOCP, isPregnant);
             if (val <= thresholdMg) {
                 return t;
             }

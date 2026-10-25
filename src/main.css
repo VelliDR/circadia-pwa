@@ -2,42 +2,40 @@
    1. DEĞİŞKENLER & TEMA AYARLARI
    ========================================================================== */
 :root {
-    /* Renk Paleti - Standart Dark Mode */
     --bg-main: #0b0f17;
-    --bg-card: rgba(21, 29, 42, 0.75);
+    --bg-card: rgba(21, 29, 42, 0.78);
     --bg-card-border: rgba(255, 255, 255, 0.08);
-    --bg-input: rgba(15, 23, 42, 0.65);
-    
+    --bg-input: rgba(15, 23, 42, 0.7);
+
     --border: #232f45;
     --border-hover: rgba(56, 189, 248, 0.4);
-    
+
     --text-main: #f1f5f9;
     --text-muted: #94a3b8;
-    
-    --accent: #38bdf8;       /* Neon Mavi */
-    --primary: #10b981;      /* Zümrüt Yeşili */
-    --danger: #ef4444;       /* Kırmızı */
-    --warning: #eab308;      /* Kehribar Sarısı */
 
-    /* Glassmorphism Efektleri */
+    --accent: #38bdf8;
+    --primary: #10b981;
+    --danger: #ef4444;
+    --warning: #eab308;
+
     --glass-blur: blur(14px);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-shadow: 0 8px 28px 0 rgba(0, 0, 0, 0.34);
+    --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* RED-SHIFT GECE NÖBETİ TEMASI (OLED RED) */
 body.red-shift {
     --bg-main: #000000;
-    --bg-card: rgba(15, 2, 2, 0.85);
-    --bg-card-border: rgba(255, 0, 0, 0.15);
-    --bg-input: rgba(10, 0, 0, 0.75);
-    
+    --bg-card: rgba(15, 2, 2, 0.88);
+    --bg-card-border: rgba(255, 0, 0, 0.16);
+    --bg-input: rgba(10, 0, 0, 0.8);
+
     --border: #330000;
     --border-hover: rgba(255, 26, 26, 0.5);
-    
+
     --text-main: #ff4d4d;
-    --text-muted: #ff8080;  /* Kontrast artırıldı */
-    
+    --text-muted: #ff8585;
+
     --accent: #ff1a1a;
     --primary: #cc0000;
     --danger: #ff0000;
@@ -45,22 +43,30 @@ body.red-shift {
 }
 
 /* ==========================================================================
-   2. TEMEL RESET & BOUT
+   2. TEMEL RESET & SAYFA İSKELETİ
    ========================================================================== */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 20px 15px;
-    max-width: 900px;
+    padding: 22px 18px calc(86px + env(safe-area-inset-bottom, 0px));
+    max-width: 960px;
     margin: 0 auto;
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
     line-height: 1.5;
 }
@@ -68,44 +74,115 @@ body {
 /* ==========================================================================
    3. ÜST BİLGİ (HEADER) & BAŞLIKLAR
    ========================================================================== */
-header {
+.app-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+}
+
+.header-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
+    gap: 10px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.header-meta-row {
+    display: flex;
+    align-items: center;
+}
+
+.cyp-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 999px;
+    padding: 3px 10px;
+    line-height: 1.35;
+}
+
+body.red-shift .cyp-badge {
+    background: rgba(255, 26, 26, 0.08);
+    border-color: rgba(255, 26, 26, 0.28);
 }
 
 h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.45rem;
+    font-weight: 800;
     color: var(--accent);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.4px;
+    white-space: nowrap;
 }
 
 h2 {
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     color: var(--text-muted);
     margin-bottom: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.7px;
+    font-weight: 700;
+}
+
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.source-pill-tag,
+.count-chip,
+.chart-legend-chip {
+    font-size: 0.72rem;
     font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+body.red-shift .source-pill-tag,
+body.red-shift .count-chip,
+body.red-shift .chart-legend-chip {
+    background: rgba(18, 0, 0, 0.7);
 }
 
 /* ==========================================================================
-   4. LAYOUT & KARTLAR (GLASSMORPHISM)
+   4. LAYOUT, GRID & KARTLAR
    ========================================================================== */
 main {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+    align-items: stretch;
+}
+
+.action-grid {
+    grid-template-columns: 1.05fr 0.95fr;
 }
 
 .card {
@@ -113,37 +190,220 @@ main {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--bg-card-border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 18px;
     box-shadow: var(--glass-shadow);
     transition: var(--transition);
+    min-width: 0;
 }
 
-.card:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+@media (hover: hover) {
+    .card:hover {
+        border-color: rgba(255, 255, 255, 0.14);
+    }
 }
 
 /* ==========================================================================
-   5. İNPUTLAR, SELECTLER & DOKUNMA ALANLARI
+   5. HERO KPI KARTLARI & GRAFİK KONTEYNERİ
+   ========================================================================== */
+.kpi-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.kpi-dual-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    margin: 2px 0 10px 0;
+}
+
+.kpi-col {
+    min-width: 0;
+}
+
+.sleep-label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.sleep-divider {
+    width: 1px;
+    height: 100%;
+    min-height: 44px;
+    background: var(--border);
+}
+
+.stat-val {
+    font-size: clamp(1.38rem, 3.8vw, 1.85rem);
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.stat-val-primary {
+    color: var(--primary);
+}
+
+.stat-val-sim {
+    color: var(--warning) !important;
+}
+
+body.red-shift .stat-val-sim {
+    color: #ff9900 !important;
+}
+
+.sub-stat-note {
+    display: block;
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.3;
+}
+
+.stat-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.kpi-footer-pill {
+    margin-top: auto;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.48);
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+body.red-shift .kpi-footer-pill {
+    background: rgba(15, 0, 0, 0.6);
+}
+
+.optimal-window-chip {
+    margin-top: 8px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 0.77rem;
+    line-height: 1.35;
+    background: rgba(56, 189, 248, 0.09);
+    border: 1px solid rgba(56, 189, 248, 0.24);
+    color: var(--text-main);
+}
+
+body.red-shift .optimal-window-chip {
+    background: rgba(255, 26, 26, 0.09);
+    border-color: rgba(255, 26, 26, 0.3);
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 275px;
+    width: 100%;
+}
+
+canvas {
+    width: 100%;
+    display: block;
+    background: var(--bg-input);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+}
+
+/* ==========================================================================
+   6. MOBİL GÖRÜNÜM SEKME ÇUBUĞU (MASAÜSTÜNDE GİZLİ)
+   ========================================================================== */
+.mobile-tab-bar {
+    display: none;
+}
+
+.mobile-tab-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-radius: 9px;
+    padding: 9px 8px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 40px;
+}
+
+.mobile-tab-btn:hover {
+    transform: none;
+    opacity: 1;
+}
+
+.mobile-tab-btn.active {
+    background: rgba(56, 189, 248, 0.16);
+    color: var(--accent);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    font-weight: 700;
+}
+
+body.red-shift .mobile-tab-btn.active {
+    background: rgba(255, 26, 26, 0.2);
+    color: var(--accent);
+    border-color: rgba(255, 26, 26, 0.42);
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: var(--warning);
+    color: #0b0f17;
+}
+
+body.red-shift .tab-badge {
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   7. FORMLAR, SEGMENTLİ KONTROLLER & DOKUNMA ALANLARI
    ========================================================================== */
 label {
     display: block;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     font-weight: 500;
 }
 
-select, input[type="number"], input[type="text"] {
+select, input[type="number"], input[type="text"], input[type="time"] {
     width: 100%;
+    min-height: 44px;
     background: var(--bg-input);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border);
     color: var(--text-main);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
     outline: none;
     font-size: 0.9rem;
     transition: var(--transition);
@@ -151,7 +411,7 @@ select, input[type="number"], input[type="text"] {
 
 select:focus, input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.22);
 }
 
 select option, optgroup {
@@ -159,54 +419,180 @@ select option, optgroup {
     color: var(--text-main);
 }
 
-body.red-shift select option, 
+body.red-shift select option,
 body.red-shift optgroup {
     background-color: #080000;
 }
 
-/* Checkbox Alanı */
+.input-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+
+.input-row > div {
+    min-width: 0;
+}
+
+.time-select-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.time-select-row select,
+.time-select-row input[type="time"] {
+    margin-bottom: 0;
+}
+
+/* Checkbox & Dokunmatik Kart Satırı */
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     color: var(--text-main);
     font-weight: 500;
     user-select: none;
+    line-height: 1.35;
 }
 
 .checkbox-label input[type="checkbox"] {
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
     accent-color: var(--accent);
     cursor: pointer;
 }
 
+.check-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid var(--border);
+    min-height: 44px;
+    transition: var(--transition);
+}
+
+body.red-shift .check-card {
+    background: rgba(14, 0, 0, 0.55);
+}
+
+.milk-row {
+    margin-bottom: 12px;
+}
+
+.check-subtext {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 0.75rem;
+}
+
+/* Mide Durumu Segmentli Seçici (Mobil Başparmak Uyumlu) */
+.stomach-segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 11px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+}
+
+body.red-shift .stomach-segmented {
+    background: rgba(12, 0, 0, 0.7);
+}
+
+.segment-option {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.segment-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.segment-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 7px 8px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    transition: var(--transition);
+    min-height: 44px;
+}
+
+.segment-text strong {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: inherit;
+}
+
+.segment-text small {
+    font-size: 0.7rem;
+    opacity: 0.85;
+}
+
+.segment-option input[type="radio"]:checked + .segment-text {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: var(--accent);
+}
+
+body.red-shift .segment-option input[type="radio"]:checked + .segment-text {
+    background: rgba(255, 26, 26, 0.2);
+    border-color: rgba(255, 26, 26, 0.45);
+    color: var(--accent);
+}
+
+.custom-drink-accordion {
+    margin-bottom: 12px;
+}
+
 /* ==========================================================================
-   6. BUTONLAR
+   8. BUTONLAR
    ========================================================================== */
 button {
     width: 100%;
+    min-height: 44px;
     background: var(--primary);
     color: #0b0f17;
     font-weight: 700;
-    padding: 12px;
+    padding: 11px 14px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     transition: var(--transition);
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
-button:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
+@media (hover: hover) {
+    button:hover {
+        opacity: 0.93;
+        transform: translateY(-1px);
+    }
 }
 
 button:active {
-    transform: translateY(0);
+    transform: scale(0.99);
+}
+
+.btn-primary-cta {
+    min-height: 48px;
+    font-size: 0.96rem;
 }
 
 body.red-shift button {
@@ -216,13 +602,20 @@ body.red-shift button {
 
 .btn-night-mode {
     width: auto;
-    padding: 6px 14px;
-    font-size: 0.8rem;
-    background: transparent;
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(15, 23, 42, 0.55);
     border: 1px solid var(--border);
     color: var(--text-main);
-    border-radius: 20px;
+    border-radius: 999px;
     box-shadow: none;
+    white-space: nowrap;
+}
+
+body.red-shift .btn-night-mode {
+    background: rgba(15, 0, 0, 0.65);
 }
 
 .btn-night-mode:hover {
@@ -235,8 +628,8 @@ body.red-shift button {
     border: 1px solid var(--border) !important;
     color: var(--text-main) !important;
     font-size: 0.82rem !important;
-    padding: 10px !important;
-    font-weight: 500 !important;
+    padding: 10px 12px !important;
+    font-weight: 600 !important;
     box-shadow: none !important;
 }
 
@@ -245,114 +638,98 @@ body.red-shift button {
     color: var(--accent) !important;
 }
 
+.btn-compact-inline {
+    width: auto !important;
+    min-height: 34px !important;
+    padding: 5px 11px !important;
+    font-size: 0.76rem !important;
+    border-radius: 999px !important;
+}
+
 /* ==========================================================================
-   7. İSTATİSTİKLER & BİLEŞENLER
+   9. PANKARTLAR, PROFİL KUTULARI & GEÇMİŞ LİSTESİ
    ========================================================================== */
-.stat-val {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent);
-    letter-spacing: -0.5px;
-}
-
-.stat-desc {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    margin-top: 4px;
-}
-
-canvas {
-    width: 100%;
-    display: block;
-    background: var(--bg-input);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
-
-/* Sağlık Barları / Pankartlar */
 .health-banner {
-    padding: 14px 18px;
-    border-radius: 10px;
+    padding: 13px 16px;
+    border-radius: 12px;
     border: 1px solid;
     backdrop-filter: var(--glass-blur);
     transition: var(--transition);
 }
 
 .banner-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     margin-bottom: 4px;
 }
 
 .banner-msg {
-    font-size: 0.85rem;
-    line-height: 1.4;
+    font-size: 0.82rem;
+    line-height: 1.42;
     opacity: 0.95;
 }
 
-/* Sigara Bırakma ve İpucu Kutuları */
 .quit-box {
-    margin-top: 10px;
-    margin-bottom: 14px;
+    margin-top: 2px;
+    margin-bottom: 12px;
     padding: 12px;
     background: rgba(56, 189, 248, 0.04);
     border: 1px dashed var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 .quit-details {
-    margin-top: 12px;
+    margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid var(--border);
 }
 
-.input-row {
-    display: flex;
-    gap: 10px;
-}
-
-.input-row > div {
-    flex: 1;
-}
-
 .quit-info-card {
-    margin-top: 10px;
-    padding: 10px;
+    margin-top: 8px;
+    padding: 9px 10px;
     background: rgba(234, 179, 8, 0.08);
     border-left: 3px solid var(--warning);
-    border-radius: 4px;
-    font-size: 0.78rem;
+    border-radius: 6px;
+    font-size: 0.76rem;
     color: var(--text-main);
-    line-height: 1.45;
+    line-height: 1.42;
 }
 
 .db-info-note {
     display: block;
     margin-bottom: 12px;
-    font-size: 0.75rem;
+    font-size: 0.76rem;
     color: var(--text-muted);
-    font-style: italic;
+    line-height: 1.4;
 }
 
 .backup-panel {
-    margin-top: 16px;
-    padding-top: 14px;
+    margin-top: 14px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
 }
 
-/* ==========================================================================
-   8. GEÇMİŞ LİSTESİ (SEMANTİK UL/LI)
-   ========================================================================== */
+/* Geçmiş Listesi (Mobil Taşma Korumalı) */
 .history-list {
     list-style: none;
     padding: 0;
-    max-height: 280px;
+    max-height: 290px;
     overflow-y: auto;
-    padding-right: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.compact-history-list {
+    max-height: 180px;
+}
+
+.empty-history-note {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    padding: 6px 0;
 }
 
 .history-list::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 .history-list::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
@@ -362,7 +739,7 @@ canvas {
 @keyframes slideInDown {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-6px);
     }
     to {
         opacity: 1;
@@ -374,42 +751,89 @@ canvas {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
+    gap: 10px;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
-    animation: slideInDown 0.3s ease forwards;
+    font-size: 0.88rem;
+    animation: slideInDown 0.22s ease forwards;
 }
 
 .history-item:last-child {
     border-bottom: none;
+    padding-bottom: 2px;
 }
 
 .history-info {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
 }
 
 .history-time {
-    color: var(--text-muted);
-    font-size: 0.8rem;
+    color: var(--accent);
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+body.red-shift .history-time {
+    background: rgba(255, 26, 26, 0.12);
+    border-color: rgba(255, 26, 26, 0.28);
+}
+
+.history-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
+
+.history-title {
     font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.history-meta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
 }
 
 .history-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
-/* Sil Butonu Mobil Touch Target Standardı (Min 36x36px) */
+.history-mg-badge {
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--primary);
+}
+
 .btn-delete {
     background: rgba(239, 68, 68, 0.12);
     color: var(--danger);
     border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 6px;
-    min-width: 36px;
-    min-height: 36px;
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -417,7 +841,6 @@ canvas {
     cursor: pointer;
     box-shadow: none;
     padding: 0;
-    transition: var(--transition);
 }
 
 .btn-delete:hover {
@@ -426,121 +849,57 @@ canvas {
 }
 
 /* ==========================================================================
-   9. FOOTER
+   10. MATERIAL 3 GLASSMORPHISM CUSTOM SELECT & AKORDİYON
    ========================================================================== */
-footer {
-    margin-top: 30px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-}
-
-.disclaimer-text {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    line-height: 1.45;
-    max-width: 750px;
-    margin: 0 auto;
-}
-/* İKİLİ UYKU KARTI STİLLERİ */
-.sleep-dual-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 8px 0;
-}
-
-.sleep-stat-box {
-    flex: 1;
-}
-
-.sleep-label {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    margin-bottom: 2px;
-    text-transform: uppercase;
-}
-
-.sleep-divider {
-    width: 1px;
-    height: 40px;
-    background: var(--border);
-}
-
-.stat-val-sim {
-    color: var(--warning) !important; /* İçilirse kayacak zamanı sarı/uyarı ile vurgular */
-}
-
-body.red-shift .stat-val-sim {
-    color: #ff9900 !important;
-}
-canvas {
-    width: 100%;
-    display: block;
-    background: var(--bg-input);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    
-    /* Mobil GPU kaydırma/görünmezlik hatasını çözen katman sabitleyici */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform;
-}
-/* ==========================================================================
-   MATERIAL 3 GLASSMORPHISM CUSTOM SELECT
-   ========================================================================== */
-
 .m3-glass-select-container {
     position: relative;
     width: 100%;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     user-select: none;
 }
 
-/* Tetikleyici Buton (Kapalı Hal) */
 .m3-glass-trigger {
     width: 100%;
-    background: rgba(15, 23, 42, 0.55);
+    min-height: 46px;
+    background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 12px 16px;
+    border-radius: 11px;
+    padding: 10px 14px;
     color: var(--text-main);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 500;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    transition: var(--transition);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
 }
 
-.m3-glass-trigger:hover {
-    background: rgba(15, 23, 42, 0.75);
-    border-color: rgba(255, 255, 255, 0.25);
+.m3-glass-label {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
 }
 
-.m3-glass-trigger:focus-visible {
+.m3-glass-trigger:focus-visible,
+.m3-glass-select-container.open .m3-glass-trigger {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4), 0 8px 25px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
 }
 
-.m3-glass-select-container.open .m3-glass-trigger {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 8px 25px rgba(0, 0, 0, 0.4);
-}
-
-/* Açılır Ok Simgesi */
 .m3-glass-arrow {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
-    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
 }
 
 .m3-glass-select-container.open .m3-glass-arrow {
@@ -548,28 +907,27 @@ canvas {
     color: var(--accent);
 }
 
-/* Açılır Menü Paneli (Glass Panel) */
 .m3-glass-dropdown {
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    max-height: 280px;
+    max-height: min(300px, 54vh);
     overflow-y: auto;
-    background: rgba(11, 15, 23, 0.75);
+    -webkit-overflow-scrolling: touch;
+    background: rgba(11, 15, 23, 0.94);
     backdrop-filter: blur(24px) saturate(200%);
     -webkit-backdrop-filter: blur(24px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    padding: 6px;
     z-index: 1000;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    
-    /* Yumuşak Açılış Animasyonu */
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-8px) scale(0.98);
-    transition: all 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    transform: translateY(-6px) scale(0.98);
+    transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 .m3-glass-select-container.open .m3-glass-dropdown {
@@ -578,27 +936,23 @@ canvas {
     transform: translateY(0) scale(1);
 }
 
-/* Kategori Başlıkları (Optgroup) */
 .m3-glass-group-label {
-    padding: 10px 12px 4px 12px;
-    font-size: 0.72rem;
+    padding: 10px 10px 4px 10px;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--accent);
-    letter-spacing: 0.8px;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
 }
 
-/* Seçenek Öğeleri */
 .m3-glass-option {
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 0.88rem;
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    line-height: 1.35;
     color: var(--text-main);
     cursor: pointer;
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    transition: background 0.14s ease;
 }
 
 .m3-glass-option:hover {
@@ -611,15 +965,14 @@ canvas {
     font-weight: 600;
 }
 
-/* Gece Modu (Red-Shift) Özel Renkleri */
 body.red-shift .m3-glass-trigger {
-    background: rgba(15, 0, 0, 0.65);
-    border-color: rgba(255, 0, 0, 0.2);
+    background: rgba(15, 0, 0, 0.7);
+    border-color: rgba(255, 0, 0, 0.22);
 }
 
 body.red-shift .m3-glass-dropdown {
-    background: rgba(8, 0, 0, 0.82);
-    border-color: rgba(255, 0, 0, 0.3);
+    background: rgba(8, 0, 0, 0.95);
+    border-color: rgba(255, 0, 0, 0.35);
 }
 
 body.red-shift .m3-glass-option.selected {
@@ -627,38 +980,32 @@ body.red-shift .m3-glass-option.selected {
     color: var(--accent);
 }
 
-/* Custom Scrollbar */
 .m3-glass-dropdown::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 .m3-glass-dropdown::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.18);
     border-radius: 4px;
 }
 
-/* ==========================================================================
-   GLASSMORPHISM ACCORDION (Custom Drink)
-   ========================================================================== */
-
+/* Glass Accordion */
 .glass-accordion {
     background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 11px;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: var(--transition);
 }
 
 .glass-accordion[open] {
     background: rgba(15, 23, 42, 0.65);
-    border-color: rgba(56, 189, 248, 0.3);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border-color: rgba(56, 189, 248, 0.28);
 }
 
 .glass-accordion summary {
-    padding: 12px 16px;
-    font-size: 0.9rem;
+    padding: 11px 14px;
+    min-height: 44px;
+    font-size: 0.84rem;
     font-weight: 600;
     color: var(--accent);
     cursor: pointer;
@@ -666,6 +1013,7 @@ body.red-shift .m3-glass-option.selected {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     user-select: none;
 }
 
@@ -675,9 +1023,10 @@ body.red-shift .m3-glass-option.selected {
 
 .glass-accordion summary::after {
     content: '+';
-    font-size: 1.2rem;
-    font-weight: 300;
-    transition: transform 0.3s ease;
+    font-size: 1.15rem;
+    font-weight: 400;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
 }
 
 .glass-accordion[open] summary::after {
@@ -685,7 +1034,7 @@ body.red-shift .m3-glass-option.selected {
 }
 
 .glass-accordion .accordion-content {
-    padding: 16px;
+    padding: 14px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -695,6 +1044,531 @@ body.red-shift .glass-accordion {
 }
 
 body.red-shift .glass-accordion[open] {
-    background: rgba(15, 0, 0, 0.7);
-    border-color: rgba(255, 26, 26, 0.3);
+    background: rgba(15, 0, 0, 0.72);
+    border-color: rgba(255, 26, 26, 0.32);
+}
+
+/* ==========================================================================
+   11. CANLI MİKTAR, (USDA | TÜRKOMP) & EMİLİM KUTULARI
+   ========================================================================== */
+.drink-preview-box {
+    margin-bottom: 12px;
+    padding: 11px 13px;
+    border-radius: 11px;
+    background: rgba(15, 23, 42, 0.58);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+body.red-shift .drink-preview-box {
+    background: rgba(15, 0, 0, 0.65);
+}
+
+.drink-preview-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+
+.polyphenol-badge {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.32);
+    color: var(--text-main);
+}
+
+body.red-shift .polyphenol-badge {
+    background: rgba(255, 26, 26, 0.15);
+    border-color: rgba(255, 26, 26, 0.35);
+}
+
+.source-compare-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.38;
+    overflow-wrap: anywhere;
+}
+
+.single-dose-warn {
+    font-size: 0.76rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: rgba(234, 179, 8, 0.14);
+    border-left: 3px solid var(--warning);
+    color: var(--text-main);
+}
+
+.absorption-preview-alert {
+    font-size: 0.78rem;
+    padding: 8px 10px;
+    border-radius: 8px;
+    line-height: 1.4;
+    border: 1px solid var(--border);
+}
+
+.absorption-preview-alert.sev-HIGH {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+}
+
+.absorption-preview-alert.sev-MODERATE {
+    background: rgba(234, 179, 8, 0.14);
+    border-color: rgba(234, 179, 8, 0.45);
+}
+
+.absorption-preview-alert.sev-LOW,
+.absorption-preview-alert.sev-NONE {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.absorption-preview-alert.sev-THERAPEUTIC {
+    background: rgba(56, 189, 248, 0.14);
+    border-color: rgba(56, 189, 248, 0.45);
+}
+
+.calcium-box {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+}
+
+body.red-shift .calcium-box {
+    background: rgba(15, 0, 0, 0.6);
+}
+
+.calcium-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.calcium-desc {
+    font-size: 0.77rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.nutrition-forms-grid {
+    margin-bottom: 14px;
+}
+
+.sub-panel {
+    padding: 14px;
+    border-radius: 11px;
+    background: rgba(15, 23, 42, 0.42);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+body.red-shift .sub-panel {
+    background: rgba(12, 0, 0, 0.55);
+}
+
+.sub-panel-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+.supp-helper-note {
+    font-size: 0.77rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px dashed var(--border);
+    margin-bottom: 12px;
+}
+
+body.red-shift .supp-helper-note {
+    background: rgba(15, 0, 0, 0.45);
+}
+
+.sub-panel-cta {
+    margin-top: auto;
+}
+
+.nutrition-history-block {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* Bilimsel Rehber & Mit Kartları */
+.myth-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.myth-card {
+    padding: 12px;
+    border-radius: 9px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border);
+    font-size: 0.79rem;
+    line-height: 1.45;
+}
+
+body.red-shift .myth-card {
+    background: rgba(14, 0, 0, 0.6);
+}
+
+.myth-card strong {
+    display: block;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.myth-card p {
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   12. YÜZEN TIKLANIR SAYAÇ & POP-UP / ALT ÇEKMECE (BOTTOM-SHEET) MODAL
+   ========================================================================== */
+.floating-timer-pill {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    min-height: 42px;
+    z-index: 1200;
+    padding: 9px 15px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--accent);
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55);
+}
+
+.floating-timer-pill.running {
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.floating-timer-pill.completed {
+    border-color: var(--primary);
+    background: rgba(16, 185, 129, 0.25);
+    color: #ffffff;
+}
+
+body.red-shift .floating-timer-pill {
+    background: rgba(12, 0, 0, 0.94);
+    border-color: var(--accent);
+    color: var(--text-main);
+}
+
+.timer-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.timer-modal-card {
+    width: 100%;
+    max-width: 430px;
+    background: rgba(15, 23, 42, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    padding: 18px 20px 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.72);
+}
+
+.timer-modal-drag-handle {
+    display: none;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    margin: 0 auto 12px;
+}
+
+body.red-shift .timer-modal-card {
+    background: rgba(12, 0, 0, 0.97);
+    border-color: rgba(255, 26, 26, 0.35);
+}
+
+.timer-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.timer-modal-header h3 {
+    font-size: 0.98rem;
+    color: var(--accent);
+}
+
+.btn-icon-close {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    box-shadow: none;
+    flex-shrink: 0;
+}
+
+.timer-modal-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.timer-digital-clock {
+    text-align: center;
+    font-size: 2.35rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+    color: var(--accent);
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+}
+
+.timer-status-caption {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 8px 0 12px 0;
+}
+
+.timer-preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.timer-preset-grid button small {
+    font-weight: 400;
+    opacity: 0.82;
+    font-size: 0.7rem;
+}
+
+/* ==========================================================================
+   13. FOOTER
+   ========================================================================== */
+footer {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.disclaimer-text {
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   14. MOBİL & TELEFON OPTİMİZASYONU (RESPONSIVE KURALLAR)
+   ========================================================================== */
+@media (max-width: 767px) {
+    body {
+        padding: 12px 12px calc(82px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-header {
+        margin-bottom: 12px;
+        padding-bottom: 11px;
+        gap: 7px;
+    }
+
+    h1 {
+        font-size: 1.25rem;
+    }
+
+    .btn-night-mode {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    main {
+        gap: 12px;
+    }
+
+    .grid,
+    .action-grid,
+    .nutrition-forms-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .card {
+        padding: 14px;
+        border-radius: 13px;
+    }
+
+    /* Mobil Görünüm Sekmeleri Aktif */
+    .mobile-tab-bar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4px;
+        padding: 4px;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.82);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        position: sticky;
+        top: 6px;
+        z-index: 900;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    body.red-shift .mobile-tab-bar {
+        background: rgba(12, 0, 0, 0.9);
+    }
+
+    /* Mobil Başparmak Ergonomisi Sıralaması:
+       Üst Özet -> Sekmeler -> Hızlı İçecek Kaydı -> Grafik -> Geçmiş */
+    #health-banner { order: 1; }
+    .hero-kpi-grid { order: 2; }
+    .mobile-tab-bar { order: 3; }
+    .action-grid { order: 4; }
+    #section-chart { order: 5; }
+    #section-nutrition { order: 6; }
+    #section-history { order: 7; }
+    #section-guide { order: 8; }
+
+    /* Sekme görünürlük filtreleri */
+    body[data-active-tab="track"] [data-mobile-tab]:not([data-mobile-tab="track"]) {
+        display: none !important;
+    }
+
+    body[data-active-tab="nutrition"] [data-mobile-tab]:not([data-mobile-tab="nutrition"]),
+    body[data-active-tab="nutrition"] .action-grid {
+        display: none !important;
+    }
+
+    body[data-active-tab="profile"] [data-mobile-tab]:not([data-mobile-tab="profile"]) {
+        display: none !important;
+    }
+
+    /* Kompakt Üst Özet Kartları */
+    .hero-kpi-grid {
+        gap: 10px;
+    }
+
+    .kpi-card {
+        padding: 12px 14px;
+    }
+
+    .kpi-card h2 {
+        font-size: 0.76rem;
+        margin-bottom: 6px;
+    }
+
+    .kpi-dual-row {
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .stat-val {
+        font-size: 1.42rem;
+    }
+
+    .kpi-footer-pill {
+        padding: 6px 9px;
+        font-size: 0.75rem;
+    }
+
+    .chart-wrapper {
+        height: 215px;
+    }
+
+    /* iOS Safari Input Auto-Zoom Koruması (16px zorunlu) */
+    select,
+    input[type="number"],
+    input[type="text"],
+    input[type="time"] {
+        font-size: 16px;
+    }
+
+    .m3-glass-option {
+        padding: 12px;
+        font-size: 0.88rem;
+    }
+
+    /* Mobil Alt Çekmece (Bottom-Sheet) Sayaç Modalı */
+    .timer-modal-backdrop {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .timer-modal-card {
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .timer-modal-drag-handle {
+        display: block;
+    }
+
+    .floating-timer-pill {
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        padding: 8px 13px;
+        font-size: 0.79rem;
+    }
+}
+
+/* Çok Dar Ekranlar (<= 365px küçük telefonlar) */
+@media (max-width: 365px) {
+    .header-top-row {
+        flex-wrap: wrap;
+    }
+
+    .input-row,
+    .timer-preset-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .time-select-row {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-val {
+        font-size: 1.25rem;
+    }
 }

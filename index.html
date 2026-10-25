@@ -2,19 +2,24 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0f17" id="meta-theme-color">
     <link rel="icon" type="image/png" href="favicon.png">
-    <title>Circadia // Biyoritim & Kafein Simülatörü</title>
+    <title>Circadia // Biyoritim, Kafein &amp; Besin Emilimi Simülatörü</title>
 </head>
-<body>
+<body data-active-tab="track">
 
-    <header>
-        <div>
+    <header class="app-header">
+        <div class="header-top-row">
             <h1>☕ Circadia</h1>
-            <span id="cyp-status" style="font-size: 0.8rem; color: var(--accent);">CYP1A2: Yükleniyor...</span>
+            <div class="header-actions">
+                <button type="button" id="btn-open-timer-top" class="btn-night-mode" aria-label="Emilim Zamanlayıcısını Aç">⏱️ Sayaç</button>
+                <button type="button" id="btn-red-shift" class="btn-night-mode" aria-label="Gece Modunu Değiştir">🔴 Gece Modu</button>
+            </div>
         </div>
-        <button id="btn-red-shift" class="btn-night-mode" aria-label="Gece Modunu Değiştir">🔴 Gece Modu</button>
+        <div class="header-meta-row">
+            <span id="cyp-status" class="cyp-badge">CYP1A2: Yükleniyor...</span>
+        </div>
     </header>
 
     <main>
@@ -24,72 +29,110 @@
             <div id="health-banner-msg" class="banner-msg"></div>
         </section>
 
-        <section class="grid">
-            <div class="card">
-                <h2>Kafein Seviyesi</h2>
-                <div class="caffeine-stat-container" style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px;">
-                    <div>
-                        <span class="sleep-label">Kandaki Aktif Yük</span>
+        <!-- ÜST ÖZET KARTLARI (HER GÖRÜNÜMDE SABİT VE DENGELİ) -->
+        <section class="grid hero-kpi-grid">
+            <div class="card kpi-card">
+                <h2>Sistemik Kafein Yükü</h2>
+                <div class="kpi-dual-row">
+                    <div class="kpi-col">
+                        <span class="sleep-label">Aktif Vücut Yükü</span>
                         <div id="active-caffeine" class="stat-val">0 mg</div>
+                        <small id="plasma-concentration" class="sub-stat-note">~0,0 mg/L plazma</small>
                     </div>
                     <div class="sleep-divider"></div>
-                    <div>
-                        <span class="sleep-label">Bugünkü Toplam Alım</span>
-                        <div id="daily-caffeine" class="stat-val" style="font-size: 1.5rem; color: var(--primary);">0 mg</div>
+                    <div class="kpi-col">
+                        <span id="daily-caffeine-label" class="sleep-label">Bugünkü Toplam</span>
+                        <div id="daily-caffeine" class="stat-val stat-val-primary">0 mg</div>
+                        <small id="rolling-caffeine-note" class="sub-stat-note">Son 24 sa: 0 mg</small>
                     </div>
                 </div>
-                <div id="stimulation-status" class="stat-desc">Hesaplanıyor...</div>
+                <div id="stimulation-status" class="stat-desc kpi-footer-pill">Hesaplanıyor...</div>
             </div>
 
-            <div class="card">
-    <h2>Güvenli Uyku Zamanı</h2>
-    
-    <div class="sleep-dual-container">
-        <!-- 1. MEVCUT DURUM -->
-        <div class="sleep-stat-box">
-            <span class="sleep-label">Şu Anki Durum</span>
-            <div id="sleep-time" class="stat-val">--:--</div>
-        </div>
-
-        <div class="sleep-divider"></div>
-
-        <!-- 2. SİMÜLE EDİLMİŞ (ŞİMDİ İÇİLİRSE) -->
-        <div class="sleep-stat-box highlight">
-            <span class="sleep-label">Seçili İçeceği İçersen</span>
-            <div id="sleep-time-simulated" class="stat-val stat-val-sim">--:--</div>
-        </div>
-    </div>
-
-    <div id="withdrawal-msg" class="stat-desc">Hesaplanıyor...</div>
-</div>
+            <div class="card kpi-card">
+                <h2>Güvenli Uyku &amp; Pencere</h2>
+                <div class="kpi-dual-row">
+                    <div class="kpi-col">
+                        <span class="sleep-label">Şu Anki Uyku</span>
+                        <div id="sleep-time" class="stat-val">--:--</div>
+                        <small class="sub-stat-note">Mevcut aktif yükle</small>
+                    </div>
+                    <div class="sleep-divider"></div>
+                    <div class="kpi-col">
+                        <span class="sleep-label">Seçili İçilirse</span>
+                        <div id="sleep-time-simulated" class="stat-val stat-val-sim">--:--</div>
+                        <small class="sub-stat-note">Simüle edilen saat</small>
+                    </div>
+                </div>
+                <div id="withdrawal-msg" class="stat-desc kpi-footer-pill">Hesaplanıyor...</div>
+                <div id="optimal-window-summary" class="optimal-window-chip" style="display: none;"></div>
+            </div>
         </section>
 
-        <section class="card" style="margin-bottom: 20px;">
-            <h2>24 Saatlik Kafein Eliminasyon Eğrisi</h2>
-            <div style="position: relative; height: 300px; width: 100%;">
-                <canvas id="caffeineChart" aria-label="24 saatlik kafein eliminasyon grafiği" role="img">
+        <!-- MOBİL GÖRÜNÜM SEÇİCİ SEKME ÇUBUĞU (YALNIZCA MOBİL EKRANLARDA GÖRÜNÜR) -->
+        <nav class="mobile-tab-bar" role="tablist" aria-label="Bölüm Seçici">
+            <button type="button" class="mobile-tab-btn active" role="tab" aria-selected="true" data-tab="track">
+                ☕ Takip
+            </button>
+            <button type="button" class="mobile-tab-btn" role="tab" aria-selected="false" data-tab="nutrition">
+                🍽️ Emilim <span id="mobile-nutrition-badge" class="tab-badge" style="display: none;">0</span>
+            </button>
+            <button type="button" class="mobile-tab-btn" role="tab" aria-selected="false" data-tab="profile">
+                ⚙️ Profil
+            </button>
+        </nav>
+
+        <!-- 24 SAATLİK GRAFİK -->
+        <section id="section-chart" class="card" data-mobile-tab="track">
+            <div class="section-header-row">
+                <h2 style="margin-bottom: 0;">24 Saatlik Eliminasyon Eğrisi</h2>
+                <small id="chart-window-legend" class="chart-legend-chip" style="display: none;">
+                    🟨 Öğün · 🟥 Takviye (−1 / +2 sa)
+                </small>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="caffeineChart" aria-label="24 saatlik kafein eliminasyon ve besin emilim penceresi grafiği" role="img">
                     <p>Grafik görüntülenemiyor. Aktif kafein takibi için metin verilerini kullanabilirsiniz.</p>
                 </canvas>
             </div>
         </section>
 
-        <section class="grid">
-            <!-- İÇECEK KAYDI EKLENEN KART -->
-            <div class="card">
-                <h2>+ İçecek Kaydı Ekle</h2>
-                <small class="db-info-note">
-                    ℹ️ Kafein miktarları %100 Arabica çekirdek ve standart demleme oranları baz alınarak hesaplanmıştır.
-                </small>
+        <!-- İŞLEM KARTLARI: İÇECEK EKLE & PROFİL -->
+        <section class="grid action-grid">
+            <!-- İÇECEK KAYDI KARTI -->
+            <div id="card-add-drink" class="card" data-mobile-tab="track">
+                <div class="section-header-row">
+                    <h2 style="margin-bottom: 0;">+ İçecek Kaydı Ekle</h2>
+                    <span class="source-pill-tag">USDA | TÜRKOMP</span>
+                </div>
 
-                <label for="select-drink" style="margin-top: 10px;">İçecek Seçin</label>
-                <select id="select-drink"></select>
+                <label for="select-drink">İçecek Seçin</label>
+                <select id="select-drink" aria-label="İçecek Seçin"></select>
 
-                <label for="select-cup">Bardak Hacmi / Boyutu</label>
-                <select id="select-cup"></select>
+                <label id="label-select-cup" for="select-cup">Porsiyon / Hacim</label>
+                <select id="select-cup" aria-label="Porsiyon veya Bardak Hacmi"></select>
+
+                <!-- CANLI MİKTAR, KAYNAK KARŞILAŞTIRMASI VE EMİLİM ÖNİZLEMESİ -->
+                <div id="drink-live-preview" class="drink-preview-box" aria-live="polite">
+                    <div class="drink-preview-top">
+                        <strong id="preview-caffeine-mg">0 mg kafein</strong>
+                        <span id="preview-polyphenol-badge" class="polyphenol-badge">0 mg polifenol</span>
+                    </div>
+                    <div id="preview-source-compare" class="source-compare-text"></div>
+                    <div id="preview-single-dose-warn" class="single-dose-warn" style="display: none;"></div>
+                    <div id="preview-absorption-alert" class="absorption-preview-alert" style="display: none;"></div>
+                </div>
+
+                <div id="milk-modifier-row" class="milk-row" style="display: none;">
+                    <label class="checkbox-label check-card">
+                        <input type="checkbox" id="chk-drink-milk">
+                        <span>🥛 Süt Eklendi <small class="check-subtext">(Ca telafi eder; DMT1 demir rekabetini artırır)</small></span>
+                    </label>
+                </div>
 
                 <label for="select-time-offset">Tüketim Zamanı</label>
-                <div class="time-select-row" style="display: flex; gap: 8px; margin-bottom: 14px;">
-                    <select id="select-time-offset" style="margin-bottom: 0;">
+                <div class="time-select-row">
+                    <select id="select-time-offset">
                         <option value="0" selected>Şimdi (Tam Şu An)</option>
                         <option value="15">15 dakika önce</option>
                         <option value="30">30 dakika önce</option>
@@ -98,42 +141,60 @@
                         <option value="240">4 saat önce</option>
                         <option value="custom">Özel Saat...</option>
                     </select>
-                    <input type="time" id="input-custom-time" style="display: none; width: auto; margin-bottom: 0;" aria-label="Özel Tüketim Saati">
+                    <input type="time" id="input-custom-time" style="display: none;" aria-label="Özel Tüketim Saati">
                 </div>
 
-                <div class="stomach-radio-group" style="margin-bottom: 14px; display: flex; gap: 16px;">
-                    <label class="checkbox-label">
+                <label>Mide Durumu (Emilim Hızı)</label>
+                <div class="stomach-segmented" role="radiogroup" aria-label="Mide Doluluk Durumu">
+                    <label class="segment-option">
                         <input type="radio" name="stomach-state" value="empty" checked>
-                        <span>Aç Karnına</span>
+                        <span class="segment-text">
+                            <strong>Aç Karnına</strong>
+                            <small>t<sub>max</sub> ~44 dk</small>
+                        </span>
                     </label>
-                    <label class="checkbox-label">
+                    <label class="segment-option">
                         <input type="radio" name="stomach-state" value="full">
-                        <span>Tok Karnına</span>
+                        <span class="segment-text">
+                            <strong>Tok Karnına</strong>
+                            <small>t<sub>max</sub> ~86 dk</small>
+                        </span>
                     </label>
                 </div>
 
-                <div class="custom-drink-accordion" style="margin-bottom: 14px;">
+                <div class="custom-drink-accordion">
                     <details id="custom-drink-details" class="glass-accordion">
                         <summary>Kendi İçeceğini Ekle (Listede Yoksa)</summary>
                         <div class="accordion-content">
                             <label for="input-custom-name">İçecek Adı</label>
                             <input type="text" id="input-custom-name" placeholder="Örn: Ev Yapımı Filtre">
                             <label for="input-custom-mg">Kafein Miktarı (mg)</label>
-                            <input type="number" id="input-custom-mg" placeholder="Örn: 100" min="1" max="1000">
+                            <input type="number" id="input-custom-mg" placeholder="Örn: 100" min="0" max="1500" style="margin-bottom: 0;">
                         </div>
                     </details>
                 </div>
 
-                <button id="btn-add-drink">Tüketim Kaydet</button>
+                <button type="button" id="btn-add-drink" class="btn-primary-cta">+ Tüketimi Kaydet</button>
             </div>
 
             <!-- PROFİL VE AYARLAR KARTI -->
-            <div class="card">
-                <h2>Profil & Karaciğer İndüksiyonu</h2>
-                
-                <label for="input-weight">Vücut Ağırlığı (kg)</label>
-                <input type="number" id="input-weight" value="70" min="30" max="250">
-                
+            <div id="card-profile" class="card" data-mobile-tab="profile">
+                <h2>Profil &amp; Karaciğer İndüksiyonu</h2>
+
+                <div class="input-row">
+                    <div>
+                        <label for="input-weight">Vücut Ağırlığı (kg)</label>
+                        <input type="number" id="input-weight" value="70" min="30" max="250">
+                    </div>
+                    <div>
+                        <label for="select-daily-window">Sayım Penceresi</label>
+                        <select id="select-daily-window">
+                            <option value="midnight">Gece Yarısı (00:00)</option>
+                            <option value="rolling24h">Son 24 Saat (Nöbet)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <label for="input-cigs">Günlük Sigara Adedi (CYP1A2)</label>
                 <input type="number" id="input-cigs" value="0" min="0" max="40">
 
@@ -146,34 +207,63 @@
                     <div id="quit-details" class="quit-details" style="display: none;">
                         <div class="input-row">
                             <div>
-                                <label for="input-days-quit">Bırakalı Kaç Gün Oldu?</label>
+                                <label for="input-days-quit">Bırakalı Kaç Gün?</label>
                                 <input type="number" id="input-days-quit" value="1" min="1" max="14">
                             </div>
                             <div>
-                                <label for="input-prior-cigs">Eski Günlük Sigara</label>
+                                <label for="input-prior-cigs">Eski Günlük Adet</label>
                                 <input type="number" id="input-prior-cigs" value="20" min="1" max="40">
                             </div>
                         </div>
                         <div class="quit-info-card">
-                            💡 <strong>Klinik İpucu:</strong> Sigara bırakıldığında karaciğer kafeini %50 daha yavaş temizler. Yaşadığınız çarpıntı veya anksiyete nikotin yoksunluğu değil, kafein birikimi olabilir.
+                            💡 <strong>Klinik İpucu:</strong> Sigara bırakıldığında CYP1A2 aktivitesi üstel hızla düşer (~39 sa yarı ömür). İlk haftadaki çarpıntı kafein birikimi kaynaklı olabilir.
                         </div>
                     </div>
                 </div>
 
-                <label class="checkbox-label" style="margin-top: 10px; margin-bottom: 12px;">
+                <label class="checkbox-label check-card" style="margin-bottom: 14px;">
                     <input type="checkbox" id="chk-ocp">
                     <span>Oral Kontraseptif Kullanımı (Yarı Ömür ~2x)</span>
                 </label>
 
                 <label for="select-tolerance">Kafein Tolerans Seviyesi</label>
-                <select id="select-tolerance">
-                    <option value="LOW">Duyarlı / Seyrek İçici (25mg Eşik)</option>
-                    <option value="MEDIUM" selected>Standart (45mg Eşik)</option>
-                    <option value="HIGH">Yüksek / Nöbetçi Modu (85mg Eşik)</option>
+                <select id="select-tolerance" aria-label="Kafein Tolerans Seviyesi">
+                    <option value="LOW">Duyarlı / Seyrek İçici (25 mg Odak / 15 mg Uyku)</option>
+                    <option value="MEDIUM" selected>Standart (45 mg Odak / 25 mg Uyku)</option>
+                    <option value="HIGH">Yüksek / Nöbetçi Modu (85 mg Odak / 40 mg Uyku)</option>
                 </select>
 
+                <!-- BESLENME & RİSK PROFİLİ (İSTEĞE BAĞLI AKORDİYON) -->
+                <details class="glass-accordion" style="margin-top: 4px;">
+                    <summary>🧬 Beslenme &amp; Klinik Hassasiyet (İsteğe Bağlı)</summary>
+                    <div class="accordion-content">
+                        <label for="select-diet-type">Beslenme Örüntüsü</label>
+                        <select id="select-diet-type">
+                            <option value="omnivore" selected>Karma Beslenme (Hayvansal + Bitkisel)</option>
+                            <option value="vegetarian">Vejetaryen (Hem demir yok; yumurta/süt var)</option>
+                            <option value="vegan">Vegan (Bitkisel non-hem demir &amp; fitat matrisi)</option>
+                        </select>
+
+                        <label for="select-special-condition">Klinik Hassasiyet / Özel Durum</label>
+                        <select id="select-special-condition">
+                            <option value="none" selected>Standart / Özel Durum Yok</option>
+                            <option value="ida_risk">Demir Eksikliği / Menstrüasyon Hassasiyeti</option>
+                            <option value="pregnant">Gebelik / Gebelik Planı (200 mg limit + Folat)</option>
+                            <option value="postmenopausal">Postmenopoz (VDR &amp; Kalsiyum Hassasiyeti)</option>
+                            <option value="iron_overload">Hemokromatozis / Talasemi (Terapötik Mod)</option>
+                        </select>
+
+                        <label for="select-calcium-level">Günlük Kalsiyum Alımı Tahmini</label>
+                        <select id="select-calcium-level" style="margin-bottom: 0;">
+                            <option value="adequate" selected>&gt; 800 mg/gün (Yeterli — Süt ürünleri / zengin kaynak)</option>
+                            <option value="moderate">600 – 800 mg/gün (Sınırda / Orta)</option>
+                            <option value="low">&lt; 600 mg/gün (Düşük — Süt ürünsüz)</option>
+                        </select>
+                    </div>
+                </details>
+
                 <div class="backup-panel">
-                    <label>Veri Yönetimi (Çevrimdışı Yedek)</label>
+                    <label>Veri Yönetimi (Çevrimdışı JSON Yedek)</label>
                     <div class="input-row">
                         <button type="button" id="btn-export" class="btn-secondary">💾 Yedek İndir</button>
                         <button type="button" id="btn-import-trigger" class="btn-secondary">📂 Yedek Yükle</button>
@@ -183,18 +273,196 @@
             </div>
         </section>
 
-        <!-- SON TÜKETİMLER KARTI -->
-        <section class="card">
-            <h2>Son Tüketimler</h2>
+        <!-- İSTEĞE BAĞLI ÖĞÜN, TAKVİYE & KALSİYUM DENGESİ KARTI -->
+        <section id="section-nutrition" class="card" data-mobile-tab="nutrition">
+            <div class="section-header-row">
+                <h2 style="margin-bottom: 0;">🍽️ Besin Emilimi &amp; Kalsiyum (İsteğe Bağlı)</h2>
+                <button type="button" id="btn-quick-meal-timer" class="btn-secondary btn-compact-inline">
+                    ⏱️ Emilim Sayacı
+                </button>
+            </div>
+            <small class="db-info-note">
+                Öğün/takviye girilmesi zorunlu değildir; boş bırakıldığında kafein ve uyku hesaplaması değişmez. Kayıt eklendiğinde demir, folat (B9) ve tiamin (B1) pencereleri (−1 sa / +2 sa) izlenir.
+            </small>
+
+            <!-- KALSİYUM & VDR SİSTEMİK DENGE KUTUSU -->
+            <div id="calcium-balance-box" class="calcium-box">
+                <div id="calcium-headline" class="calcium-title">🟢 Kalsiyum Dengesi Hesaplanıyor...</div>
+                <div id="calcium-detail" class="calcium-desc"></div>
+            </div>
+
+            <div class="grid nutrition-forms-grid">
+                <!-- HIZLI ÖĞÜN KAYDI -->
+                <div class="sub-panel">
+                    <h3 class="sub-panel-title">Öğün Ekle</h3>
+                    <div class="input-row">
+                        <div>
+                            <label for="select-meal-type">Öğün</label>
+                            <select id="select-meal-type">
+                                <option value="breakfast">Kahvaltı</option>
+                                <option value="lunch">Öğle Yemeği</option>
+                                <option value="dinner">Akşam Yemeği</option>
+                                <option value="snack">Ara Öğün</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="select-meal-offset">Zaman</label>
+                            <select id="select-meal-offset">
+                                <option value="0" selected>Şimdi</option>
+                                <option value="15">15 dk önce</option>
+                                <option value="30">30 dk önce</option>
+                                <option value="60">1 saat önce</option>
+                                <option value="90">1,5 saat önce</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label for="select-meal-matrix">Besin Kaynağı Matrisi</label>
+                    <select id="select-meal-matrix">
+                        <option value="plant" selected>🌱 Bitkisel / Yumurta / Peynir (Non-Hem Fe³⁺)</option>
+                        <option value="mixed">🍲 Karma Öğün (Et + Bitkisel birlikte)</option>
+                        <option value="animal">🥩 Kırmızı Et / Tavuk / Balık (Porfirin Kalkanlı)</option>
+                    </select>
+
+                    <label class="checkbox-label check-card" style="margin-bottom: 12px;">
+                        <input type="checkbox" id="chk-meal-vitc">
+                        <span>🍊 Öğünde C Vitamini Var (~200 mg / taze salata-meyve)</span>
+                    </label>
+
+                    <button type="button" id="btn-add-meal" class="sub-panel-cta">+ Öğün Kaydet &amp; Pencere İzle</button>
+                </div>
+
+                <!-- HIZLI TAKVİYE KAYDI -->
+                <div class="sub-panel">
+                    <h3 class="sub-panel-title">Vitamin / Mineral Takviyesi Ekle</h3>
+                    <div class="input-row">
+                        <div>
+                            <label for="select-supp-type">Takviye Türü</label>
+                            <select id="select-supp-type">
+                                <option value="iron">💊 Demir (Fe²⁺ / Fe³⁺ / NaFeEDTA)</option>
+                                <option value="folate">💊 Folik Asit / 5-MTHF (B9)</option>
+                                <option value="thiamine">💊 Tiamin (B1) / B-Kompleks</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="select-supp-offset">Zaman</label>
+                            <select id="select-supp-offset">
+                                <option value="0" selected>Şimdi</option>
+                                <option value="15">15 dk önce</option>
+                                <option value="30">30 dk önce</option>
+                                <option value="60">1 saat önce</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <p class="supp-helper-note">
+                        Çay/kahve polifenolleri demir tuzlarını bağlar; kateşinler (EGCG) PCFT/DHFR üzerinden folik asidi, kafeik/tannik asit ise tiamini (B1) baskılar. İdeal ara: <strong>≥2 saat</strong>.
+                    </p>
+
+                    <button type="button" id="btn-add-supplement" class="btn-secondary sub-panel-cta">+ Takviye Kaydet &amp; 2s Sayaç Kur</button>
+                </div>
+            </div>
+
+            <div class="nutrition-history-block">
+                <h3 class="sub-panel-title">Son Öğün &amp; Takviye Kayıtları</h3>
+                <ul id="nutrition-history-list" class="history-list compact-history-list">
+                    <li class="empty-history-note">Kayıtlı öğün veya takviye yok (isteğe bağlı).</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- SON İÇECEK TÜKETİMLERİ KARTI -->
+        <section id="section-history" class="card" data-mobile-tab="track">
+            <div class="section-header-row">
+                <h2 style="margin-bottom: 0;">Son İçecek Tüketimleri</h2>
+                <span id="drink-history-count" class="count-chip">0 kayıt</span>
+            </div>
             <ul id="history-list" class="history-list">
-                <li style="color: var(--text-muted); font-size: 0.85rem;">Henüz içecek eklenmedi.</li>
+                <li class="empty-history-note">Henüz içecek eklenmedi.</li>
             </ul>
+        </section>
+
+        <!-- BİLİMSEL REHBER & MİT KIRICILAR -->
+        <section id="section-guide" class="card" data-mobile-tab="profile">
+            <details class="glass-accordion">
+                <summary>📚 Klinik Literatür Özeti &amp; Emilim Mit Kırıcıları</summary>
+                <div class="accordion-content">
+                    <div class="myth-grid">
+                        <div class="myth-card">
+                            <strong>❌ Mit: "Bitki çayları kafeinsizdir, demiri etkilemez."</strong>
+                            <p>Demiri bağlayan kafein değil polifenollerdir. Nane çayı (%84), yarpuz (%73), kakao (%71), mine çiçeği (%59), ıhlamur (%52) ve papatya (%47) bitkisel demiri siyah çay kadar güçlü bloke eder. <strong>Rooibos</strong> düşük tanen yapısıyla güvenli istisnadır <em>(Hurrell et al., 1999)</em>.</p>
+                        </div>
+                        <div class="myth-card">
+                            <strong>❌ Mit: "Çaya veya kahveye süt eklemek tanenleri nötrler."</strong>
+                            <p>Klinik izotop çalışmalarında sütün tanen blokajını kaldırmadığı, aksine süt kalsiyumunun enterosit DMT1 taşıyıcısında demirle yarışarak sütlü kahvede inhibisyonu 2 kata kadar artırabildiği gösterilmiştir <em>(Morck et al., 1983; Hurrell et al., 1999)</em>.</p>
+                        </div>
+                        <div class="myth-card">
+                            <strong>🛡️ Hayvansal Hem vs. Bitkisel Non-Hem Asimetrisi</strong>
+                            <p>Et, kümes hayvanları ve balıktaki hem demir (Fe²⁺), protoporfirin halkasıyla sterik olarak korunduğu için çay/kahve tanenlerinden etkilenmez. Bitkisel gıdalar, yumurta ve demir haplarındaki non-hem demir (Fe³⁺) ise demir-tannat çökeltisi oluşturur.</p>
+                        </div>
+                        <div class="myth-card">
+                            <strong>⏰ Kronobiyolojik Kural (−1 Saat / +2 Saat &amp; Sabah Hepsidini)</strong>
+                            <p>Öğünden ≥1 saat önce içilen kahve/çay mideyi hızla terk ettiği için emilimi bozmaz <em>(Morck, 1983)</em>. Öğünden sonra ise en az 1–2 saat ara vermek emilimi 2,5–3 kat kurtarır <em>(Ahmad Fuzi, 2017)</em>. Sabah hepsidin düşükken demir emilimi %70 daha yüksektir.</p>
+                        </div>
+                        <div class="myth-card">
+                            <strong>🧬 Folat (B9) &amp; Tiamin (B1) Hassasiyeti</strong>
+                            <p>Yeşil/siyah çay kateşinleri (EGCG/ECG) DHFR ve PCFT taşıyıcısını yarışmalı bloke ederek folik asit emilimini düşürür <em>(Alemdaroglu et al., 2008)</em>. Tannik ve kafeik asit ise bitkisel serbest tiamini okside eder; C vitamini her ikisini de kısmen korur.</p>
+                        </div>
+                        <div class="myth-card">
+                            <strong>🦴 Kafein, VDR ve Kalsiyum Ekonomisi</strong>
+                            <p>Alınan her 175 mg kafein idrarla ~6 mg net kalsiyum kaybı yaratır ve yüksek dozlarda (&gt;300 mg/gün) D Vitamini Reseptörü (VDR) ekspresyonunu baskılar. Günlük &gt;800 mg kalsiyum alımı bu kaybı tamamen telafi eder <em>(Rapuri et al., 2007)</em>.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
         </section>
     </main>
 
+    <!-- YÜZEN TIKLANABİLİR EMİLİM SAYACI PİLL BUTONU -->
+    <button type="button" id="floating-timer-pill" class="floating-timer-pill" aria-label="Emilim Sayacı Durumu">
+        <span id="floating-timer-text">⏱️ Sayaç</span>
+    </button>
+
+    <!-- UYGULAMA İÇİ POP-UP EMİLİM SAYACI MODALI -->
+    <div id="timer-modal-backdrop" class="timer-modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="timer-modal-title">
+        <div class="timer-modal-card">
+            <div class="timer-modal-drag-handle" aria-hidden="true"></div>
+            <div class="timer-modal-header">
+                <h3 id="timer-modal-title">⏱️ Emilim Penceresi Sayacı</h3>
+                <button type="button" id="btn-close-timer-modal" class="btn-icon-close" aria-label="Sayacı Kapat">✕</button>
+            </div>
+            <p id="timer-modal-subtitle" class="timer-modal-desc">
+                Yemek veya vitamin/demir takviyesinden sonra çay/kahve için güvenli süreyi uygulama içinden takip edin (bildirim izni gerekmez).
+            </p>
+
+            <div id="timer-countdown-display" class="timer-digital-clock">00:00</div>
+            <div id="timer-status-caption" class="timer-status-caption">Sayaç şu an kapalı.</div>
+
+            <div class="timer-preset-grid">
+                <button type="button" class="btn-secondary btn-timer-preset" data-minutes="60">
+                    ⏳ 60 dk Başlat<br><small>Standart Öğün Arası</small>
+                </button>
+                <button type="button" class="btn-secondary btn-timer-preset" data-minutes="90">
+                    ⏳ 90 dk Başlat<br><small>Koyu Çay / Bitkisel</small>
+                </button>
+                <button type="button" class="btn-secondary btn-timer-preset" data-minutes="120">
+                    ⏳ 120 dk Başlat<br><small>Demir / Folat Takviyesi</small>
+                </button>
+                <button type="button" id="btn-timer-smart" class="btn-secondary" style="display: none;">
+                    🎯 Akıllı Pencereye Kur
+                </button>
+            </div>
+
+            <div class="input-row" style="margin-top: 12px;">
+                <button type="button" id="btn-cancel-timer" class="btn-secondary" style="display: none;">⏹️ Sayacı Sıfırla</button>
+                <button type="button" id="btn-done-timer-modal">Tamam</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p class="disclaimer-text">
-            ⚠️ <strong>Yasal Uyarı:</strong> Circadia bir farmakokinetik ve biyoritim simülasyon aracıdır. Sunulan veriler popülasyon ortalamalarına dayalı matematiksel tahminlerdir; tıbbi teşhis, tedavi veya klinik karar tavsiyesi niteliği taşımaz. Şiddetli çarpıntı veya rahatsızlık durumunda derhal bir sağlık kuruluşuna başvurunuz.
+            ⚠️ <strong>Yasal Uyarı:</strong> Circadia bir farmakokinetik, biyoritim ve beslenme biyokimyası simülasyon aracıdır. Sunulan veriler popülasyon ortalamalarına ve klinik izotop çalışmalarına dayalı matematiksel tahminlerdir; tıbbi teşhis, tedavi veya klinik karar tavsiyesi niteliği taşımaz. Gebelik, demir eksikliği anemisi, osteoporoz veya hemokromatozis/talasemi durumlarında mutlaka hekiminize danışınız.
         </p>
     </footer>
 

@@ -1,18 +1,69 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
-
 export interface DrinkRecord {
     id: number;
+    drinkId?: string;
     name: string;
     caffeineMg: number;
+    polyphenolMg?: number;
+    hasMilk?: boolean;
+    /** Kayıt anındaki etkin yarılanma ömrü (saat) — geçmiş eğrilerin sonradan bozulmasını önler */
+    effectiveHalfLife?: number;
     timestamp: number;
-    stomachState?: 'empty' | 'full'; // Yeni eklenen özellik
+    stomachState?: 'empty' | 'full';
 }
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type MealMatrixType = 'plant' | 'animal' | 'mixed';
+
+export interface MealRecord {
+    id: number;
+    mealType: MealType;
+    /** plant: Bitkisel / Yumurta / Süt (Non-hem Fe3+); animal: Kırmızı et / Tavuk / Balık (Hem Fe2+ + Et Faktörü); mixed: Karma */
+    matrixType: MealMatrixType;
+    /** Öğünde ~200 mg askorbik asit / taze C vitamini kaynağı var mı? */
+    hasVitaminC: boolean;
+    timestamp: number;
+    label: string;
+}
+
+export type SupplementType = 'iron' | 'folate' | 'thiamine' | 'calcium';
+
+export interface SupplementRecord {
+    id: number;
+    supplementType: SupplementType;
+    timestamp: number;
+    label: string;
+}
+
+export type DietType = 'omnivore' | 'vegetarian' | 'vegan';
+export type SpecialCondition = 'none' | 'ida_risk' | 'pregnant' | 'postmenopausal' | 'iron_overload';
+export type CalciumIntakeLevel = 'low' | 'moderate' | 'adequate';
+
+export interface NutritionProfile {
+    dietType: DietType;
+    specialCondition: SpecialCondition;
+    calciumIntakeLevel: CalciumIntakeLevel;
+}
+
+export const DEFAULT_NUTRITION_PROFILE: NutritionProfile = {
+    dietType: 'omnivore',
+    specialCondition: 'none',
+    calciumIntakeLevel: 'adequate'
+};
 
 export interface CircadiaDB extends DBSchema {
     history: {
         key: number;
         value: DrinkRecord;
+    };
+    meals: {
+        key: number;
+        value: MealRecord;
+    };
+    supplements: {
+        key: number;
+        value: SupplementRecord;
     };
     settings: {
         key: string;
@@ -21,13 +72,19 @@ export interface CircadiaDB extends DBSchema {
 }
 
 const DB_NAME = 'circadia-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export async function initDB(): Promise<IDBPDatabase<CircadiaDB>> {
     return openDB<CircadiaDB>(DB_NAME, DB_VERSION, {
         upgrade(db) {
             if (!db.objectStoreNames.contains('history')) {
                 db.createObjectStore('history', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('meals')) {
+                db.createObjectStore('meals', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('supplements')) {
+                db.createObjectStore('supplements', { keyPath: 'id' });
             }
             if (!db.objectStoreNames.contains('settings')) {
                 db.createObjectStore('settings');
