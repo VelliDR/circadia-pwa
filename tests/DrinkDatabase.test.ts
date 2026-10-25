@@ -4,7 +4,8 @@ import {
     calculateCaffeineMg,
     calculatePolyphenolMg,
     getServing,
-    formatSourceComparison
+    formatSourceComparison,
+    filterDrinks
 } from '../src/db/drinkDatabase';
 
 describe('Drink Database & Comparative (USDA | TÜRKOMP) Dosing Model', () => {
@@ -73,4 +74,78 @@ describe('Drink Database & Comparative (USDA | TÜRKOMP) Dosing Model', () => {
         expect(calculateCaffeineMg(rooibos, getServing(rooibos))).toBe(0);
         expect(rooibos.polyphenols.ironInhibitionClass).toBe('NONE');
     });
+
+    it('should include all 24 mono-herbal drugs and 8 commercial blends with full bioactive profiles', () => {
+        expect(DRINK_DATABASE.length).toBeGreaterThanOrEqual(55);
+
+        const monoHerbals = DRINK_DATABASE.filter(d => d.categoryGroup === 'mono_herbal');
+        expect(monoHerbals.length).toBeGreaterThanOrEqual(24);
+
+        const blends = DRINK_DATABASE.filter(d => d.categoryGroup === 'blend');
+        expect(blends.length).toBeGreaterThanOrEqual(8);
+
+        // Bitter fennel: EMA limit 50 µg/day, bitter fennel gives 75-100 µg estragol per cup
+        const bitterFennel = DRINK_DATABASE.find(d => d.id === 'fennel_bitter_tea')!;
+        expect(bitterFennel).toBeDefined();
+        expect(bitterFennel.bioactives?.estragolUg).toBeGreaterThanOrEqual(50);
+        expect(bitterFennel.bioactives?.clinicalSafetyAlert).toContain('EMA');
+
+        // Form tea: Anthranoids 19.5-24.5 mg
+        const formClassic = DRINK_DATABASE.find(d => d.id === 'blend_form_classic')!;
+        expect(formClassic).toBeDefined();
+        expect(formClassic.bioactives?.anthranoidsMg).toBeGreaterThanOrEqual(15);
+        expect(formClassic.bioactives?.clinicalSafetyAlert).toContain('14 günden uzun');
+
+        // Sage comparison: Salvia officinalis (neurotoxic thujone) vs Salvia triloba (safe)
+        const medSage = DRINK_DATABASE.find(d => d.id === 'sage_tea_medicinal')!;
+        const anatoliaSage = DRINK_DATABASE.find(d => d.id === 'sage_tea_anatolian')!;
+        expect(medSage.bioactives?.thujoneMg).toBeGreaterThan(0.5);
+        expect(anatoliaSage.bioactives?.thujoneMg).toBeLessThan(0.2);
+
+        // Granular lactation tea: High sucrose load (7.9 g / cup)
+        const stillTee = DRINK_DATABASE.find(d => d.id === 'blend_lactation_granule')!;
+        expect(stillTee.bioactives?.sugarG).toBeGreaterThanOrEqual(7);
+        expect(stillTee.bioactives?.caloriesKcal).toBeGreaterThanOrEqual(30);
+    });
+
+    it('should filter drinks correctly by text search, symptom tags, bioactives, categories, and favorites', () => {
+        // 1. All drinks
+        const all = filterDrinks(DRINK_DATABASE, '', 'all');
+        expect(all.length).toBe(DRINK_DATABASE.length);
+
+        // 2. Search by herb name
+        const chamomileResults = filterDrinks(DRINK_DATABASE, 'papatya', 'all');
+        expect(chamomileResults.some(d => d.id === 'chamomile_tea')).toBe(true);
+
+        // 3. Search by symptom tag: "uyku"
+        const sleepResults = filterDrinks(DRINK_DATABASE, 'uyku', 'all');
+        expect(sleepResults.some(d => d.id === 'chamomile_tea')).toBe(true);
+        expect(sleepResults.some(d => d.id === 'passionflower_tea')).toBe(true);
+        expect(sleepResults.some(d => d.id === 'blend_relax_passiflora')).toBe(true);
+
+        // 4. Search by symptom tag: "gaz"
+        const gasResults = filterDrinks(DRINK_DATABASE, 'gaz', 'all');
+        expect(gasResults.some(d => d.id === 'fennel_bitter_tea')).toBe(true);
+        expect(gasResults.some(d => d.id === 'blend_digestive')).toBe(true);
+
+        // 5. Search by bioactive component: "apigenin"
+        const apigeninResults = filterDrinks(DRINK_DATABASE, 'apigenin', 'all');
+        expect(apigeninResults.some(d => d.id === 'chamomile_tea')).toBe(true);
+
+        // 6. Category group filtering
+        const monoOnly = filterDrinks(DRINK_DATABASE, '', 'mono_herbal');
+        expect(monoOnly.every(d => d.categoryGroup === 'mono_herbal')).toBe(true);
+        expect(monoOnly.length).toBeGreaterThanOrEqual(24);
+
+        const blendsOnly = filterDrinks(DRINK_DATABASE, '', 'blend');
+        expect(blendsOnly.every(d => d.categoryGroup === 'blend')).toBe(true);
+        expect(blendsOnly.length).toBeGreaterThanOrEqual(8);
+
+        // 7. Favorites filtering
+        const myFavs = ['filter_coffee', 'chamomile_tea', 'blend_digestive'];
+        const favResults = filterDrinks(DRINK_DATABASE, '', 'favorites', myFavs);
+        expect(favResults.length).toBe(3);
+        expect(favResults.map(d => d.id).sort()).toEqual(myFavs.sort());
+    });
 });
+

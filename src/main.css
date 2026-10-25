@@ -1049,6 +1049,213 @@ body.red-shift .glass-accordion[open] {
 }
 
 /* ==========================================================================
+   10.1 İÇECEK ARAMA, HIZLI SEÇİM DOKU & KATEGORİ FİLTRELEME
+   ========================================================================== */
+.quick-add-dock {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px dashed var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.quick-add-dock::-webkit-scrollbar {
+    display: none;
+}
+
+body.red-shift .quick-add-dock {
+    background: rgba(15, 0, 0, 0.5);
+    border-color: rgba(255, 0, 0, 0.25);
+}
+
+.dock-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.dock-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.dock-chip {
+    width: auto !important;
+    min-height: 28px !important;
+    height: 28px;
+    padding: 2px 10px !important;
+    border-radius: 999px;
+    font-size: 0.73rem !important;
+    font-weight: 600;
+    background: rgba(56, 189, 248, 0.12) !important;
+    border: 1px solid rgba(56, 189, 248, 0.28) !important;
+    color: var(--text-main) !important;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: none !important;
+    transition: all 0.15s ease;
+}
+
+.dock-chip:hover {
+    background: rgba(56, 189, 248, 0.22) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+}
+
+body.red-shift .dock-chip {
+    background: rgba(255, 26, 26, 0.15) !important;
+    border-color: rgba(255, 26, 26, 0.35) !important;
+}
+
+body.red-shift .dock-chip:hover {
+    background: rgba(255, 26, 26, 0.28) !important;
+    border-color: var(--accent) !important;
+}
+
+.drink-search-container {
+    margin-bottom: 8px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 2;
+}
+
+#input-drink-search {
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 38px 9px 36px;
+    margin-bottom: 0;
+    font-size: 0.88rem;
+    border-radius: 11px;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    transition: var(--transition);
+}
+
+#input-drink-search:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+body.red-shift #input-drink-search {
+    background: rgba(15, 0, 0, 0.7);
+    border-color: rgba(255, 0, 0, 0.25);
+}
+
+body.red-shift #input-drink-search:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255, 26, 26, 0.3);
+}
+
+.btn-clear-search {
+    position: absolute;
+    right: 8px;
+    width: 26px !important;
+    min-height: 26px !important;
+    height: 26px;
+    padding: 0 !important;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: none;
+    color: var(--text-muted) !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    box-shadow: none !important;
+    z-index: 2;
+}
+
+.btn-clear-search:hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: var(--text-main) !important;
+}
+
+body.red-shift .btn-clear-search {
+    background: rgba(255, 0, 0, 0.2) !important;
+    color: var(--accent) !important;
+}
+
+.drink-category-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 0 6px 0;
+    margin-bottom: 12px;
+    scrollbar-width: none;
+}
+
+.drink-category-pills::-webkit-scrollbar {
+    display: none;
+}
+
+.cat-pill {
+    width: auto !important;
+    min-height: 32px !important;
+    height: 32px;
+    padding: 4px 12px !important;
+    border-radius: 999px;
+    font-size: 0.76rem !important;
+    font-weight: 600;
+    background: rgba(15, 23, 42, 0.55) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: none !important;
+    transition: var(--transition);
+}
+
+.cat-pill:hover {
+    border-color: var(--accent) !important;
+    color: var(--text-main) !important;
+}
+
+.cat-pill.active {
+    background: rgba(56, 189, 248, 0.18) !important;
+    border-color: rgba(56, 189, 248, 0.45) !important;
+    color: var(--accent) !important;
+    font-weight: 700;
+}
+
+body.red-shift .cat-pill {
+    background: rgba(15, 0, 0, 0.6) !important;
+    border-color: rgba(255, 0, 0, 0.25) !important;
+}
+
+body.red-shift .cat-pill.active {
+    background: rgba(255, 26, 26, 0.22) !important;
+    border-color: rgba(255, 26, 26, 0.48) !important;
+    color: var(--accent) !important;
+}
+
+/* ==========================================================================
    11. CANLI MİKTAR, (USDA | TÜRKOMP) & EMİLİM KUTULARI
    ========================================================================== */
 .drink-preview-box {
@@ -1095,6 +1302,116 @@ body.red-shift .polyphenol-badge {
     color: var(--text-muted);
     line-height: 1.38;
     overflow-wrap: anywhere;
+}
+
+/* Farmakopeik Biyoaktif Profil Kartı */
+.preview-bioactives-card {
+    margin-top: 4px;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+body.red-shift .preview-bioactives-card {
+    background: rgba(15, 0, 0, 0.6);
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+.bioactive-line {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: 0.77rem;
+    line-height: 1.4;
+}
+
+.bioactive-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgba(56, 189, 248, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.bioactive-badge.secondary {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.35);
+    color: #c084fc;
+}
+
+body.red-shift .bioactive-badge {
+    background: rgba(255, 26, 26, 0.2);
+    border-color: rgba(255, 26, 26, 0.4);
+    color: var(--accent);
+}
+
+.bioactive-text {
+    color: var(--text-main);
+    font-size: 0.77rem;
+}
+
+.bioactive-extra-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+.extra-stat-pill {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.extra-stat-pill.sugar {
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+}
+
+.extra-stat-pill.warn {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #f87171;
+}
+
+body.red-shift .extra-stat-pill.sugar {
+    background: rgba(255, 150, 0, 0.18);
+    border-color: rgba(255, 150, 0, 0.4);
+}
+
+body.red-shift .extra-stat-pill.warn {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.45);
+    color: #ff8888;
+}
+
+.clinical-safety-alert {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: rgba(239, 68, 68, 0.13);
+    border-left: 3px solid #ef4444;
+    color: var(--text-main);
+    margin-top: 3px;
+}
+
+body.red-shift .clinical-safety-alert {
+    background: rgba(255, 0, 0, 0.16);
+    border-left-color: #ff3333;
 }
 
 .single-dose-warn {

@@ -106,6 +106,31 @@
                     <span class="source-pill-tag">USDA | TÜRKOMP</span>
                 </div>
 
+                <!-- HIZLI SEÇİM DOKU (Son Tüketilenler) -->
+                <div id="quick-add-dock" class="quick-add-dock" style="display: none;">
+                    <span class="dock-title">⚡ Hızlı Seçim:</span>
+                    <div id="quick-add-chips" class="dock-chips"></div>
+                </div>
+
+                <!-- BAĞIMSIZ GENEL ARAMA ÇUBUĞU -->
+                <div class="drink-search-container">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon" aria-hidden="true">🔍</span>
+                        <input type="text" id="input-drink-search" placeholder="İçecek, bitki, etiket veya şikayet ara (örn: papatya, gaz, uyku, filtre)..." aria-label="İçecek genel arama">
+                        <button type="button" id="btn-clear-search" class="btn-clear-search" aria-label="Aramayı temizle" style="display: none;">✕</button>
+                    </div>
+                </div>
+
+                <!-- KATEGORİ FİLTRE PİLLERİ -->
+                <div class="drink-category-pills" role="tablist" aria-label="İçecek Kategori Filtresi">
+                    <button type="button" class="cat-pill active" data-category-group="all">Tümü</button>
+                    <button type="button" class="cat-pill" data-category-group="favorites">⭐ Sık İçilen</button>
+                    <button type="button" class="cat-pill" data-category-group="coffee">☕ Kahveler</button>
+                    <button type="button" class="cat-pill" data-category-group="tea">🍵 Çaylar</button>
+                    <button type="button" class="cat-pill" data-category-group="mono_herbal">🌸 Bitki Çayları</button>
+                    <button type="button" class="cat-pill" data-category-group="blend">🌿 Hazır Karışımlar</button>
+                </div>
+
                 <label for="select-drink">İçecek Seçin</label>
                 <select id="select-drink" aria-label="İçecek Seçin"></select>
 
@@ -119,6 +144,26 @@
                         <span id="preview-polyphenol-badge" class="polyphenol-badge">0 mg polifenol</span>
                     </div>
                     <div id="preview-source-compare" class="source-compare-text"></div>
+
+                    <!-- FARMAKOPEİK BİYOAKTİF PROFİL VE GÜVENLİK UYARISI -->
+                    <div id="preview-bioactives-box" class="preview-bioactives-card" style="display: none;">
+                        <div class="bioactive-line">
+                            <span class="bioactive-badge">Primer Etken</span>
+                            <span id="preview-primary-actives" class="bioactive-text"></span>
+                        </div>
+                        <div id="preview-secondary-row" class="bioactive-line" style="display: none;">
+                            <span class="bioactive-badge secondary">Sekonder / Matris</span>
+                            <span id="preview-secondary-actives" class="bioactive-text"></span>
+                        </div>
+                        <div id="preview-extra-stats-row" class="bioactive-extra-stats" style="display: none;">
+                            <span id="preview-sugar-badge" class="extra-stat-pill sugar" style="display: none;"></span>
+                            <span id="preview-estragol-badge" class="extra-stat-pill warn" style="display: none;"></span>
+                            <span id="preview-anthranoid-badge" class="extra-stat-pill warn" style="display: none;"></span>
+                            <span id="preview-thujone-badge" class="extra-stat-pill warn" style="display: none;"></span>
+                        </div>
+                        <div id="preview-clinical-alert" class="clinical-safety-alert" style="display: none;"></div>
+                    </div>
+
                     <div id="preview-single-dose-warn" class="single-dose-warn" style="display: none;"></div>
                     <div id="preview-absorption-alert" class="absorption-preview-alert" style="display: none;"></div>
                 </div>

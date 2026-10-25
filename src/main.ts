@@ -8,12 +8,14 @@
 import {
     DRINK_DATABASE,
     Drink,
+    DrinkCategoryGroup,
     calculateCaffeineMg,
     calculatePolyphenolMg,
     getServing,
     getDefaultCaffeineMg,
     formatSourceComparison,
-    isIntrinsicMilkDrink
+    isIntrinsicMilkDrink,
+    filterDrinks
 } from './db/drinkDatabase';
 import { Pharmacokinetics } from './engine/Pharmacokinetics';
 import { ToleranceEngine, ToleranceKey, DailyWindowMode } from './engine/ToleranceEngine';
@@ -80,6 +82,9 @@ class CircadiaApp {
     isOCP: boolean = false;
     isRedShift: boolean = false;
     nutritionProfile: NutritionProfile = { ...DEFAULT_NUTRITION_PROFILE };
+
+    currentCategoryGroup: DrinkCategoryGroup = 'all';
+    currentSearchQuery: string = '';
 
     timerState: InAppTimerState = { endTimestamp: null, label: '' };
     lastSuggestedSmartMinutes: number = 0;
@@ -256,16 +261,42 @@ class CircadiaApp {
         return now - (minsOffset * 60 * 1000);
     }
 
-    initUI() {
-        const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement | null;
+    private getFavoriteDrinkIds(): string[] {
+        const counts: Record<string, number> = {};
+        for (const rec of this.drinkHistory) {
+            if (rec.drinkId) {
+                counts[rec.drinkId] = (counts[rec.drinkId] || 0) + 1;
+            }
+        }
+        return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([id]) => id);
+    }
 
-        // 1. İçecek Listesini Kategorili Doldur
-        if (drinkSelect && drinkSelect.children.length === 0) {
-            const categories = [...new Set(DRINK_DATABASE.map(d => d.category))];
+    private populateDrinkSelect(preferredDrinkId?: string) {
+        const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement | null;
+        if (!drinkSelect) return;
+
+        const currentVal = preferredDrinkId || drinkSelect.value || DRINK_DATABASE[0].id;
+        const favIds = this.getFavoriteDrinkIds();
+        const filtered = filterDrinks(DRINK_DATABASE, this.currentSearchQuery, this.currentCategoryGroup, favIds);
+
+        drinkSelect.innerHTML = '';
+
+        if (filtered.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '⚠️ Eşleşen içecek bulunamadı';
+            opt.disabled = true;
+            opt.selected = true;
+            drinkSelect.appendChild(opt);
+        } else {
+            const categories = [...new Set(filtered.map(d => d.category))];
             categories.forEach(cat => {
                 const group = document.createElement('optgroup');
                 group.label = `--- ${cat.toUpperCase()} ---`;
-                DRINK_DATABASE.filter(d => d.category === cat).forEach(drink => {
+                filtered.filter(d => d.category === cat).forEach(drink => {
                     const opt = document.createElement('option');
                     opt.value = drink.id;
                     const defaultMg = getDefaultCaffeineMg(drink);
@@ -274,10 +305,116 @@ class CircadiaApp {
                 });
                 drinkSelect.appendChild(group);
             });
+
+            const foundCurrent = filtered.some(d => d.id === currentVal);
+            drinkSelect.value = foundCurrent ? currentVal : filtered[0].id;
         }
 
-        // 2. İlk İçeceğin Porsiyon Seçeneklerini Doldur
+        if (this.glassDrinkSelect) {
+            this.glassDrinkSelect.refresh();
+        }
+
         this.populateServingSelect(this.getSelectedDrink());
+    }
+
+    private renderQuickAddDock() {
+        const dock = document.getElementById('quick-add-dock');
+        const chipsContainer = document.getElementById('quick-add-chips');
+        if (!dock || !chipsContainer) return;
+
+        const recentIds: string[] = [];
+        for (let i = this.drinkHistory.length - 1; i >= 0 && recentIds.length < 5; i--) {
+            const did = this.drinkHistory[i].drinkId;
+            if (did && !recentIds.includes(did)) {
+                recentIds.push(did);
+            }
+        }
+
+        if (recentIds.length === 0) {
+            dock.style.display = 'none';
+            return;
+        }
+
+        dock.style.display = 'flex';
+        chipsContainer.innerHTML = '';
+
+        recentIds.forEach(id => {
+            const drink = DRINK_DATABASE.find(d => d.id === id);
+            if (!drink) return;
+
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'dock-chip';
+            chip.textContent = drink.name;
+            chip.addEventListener('click', () => {
+                this.currentCategoryGroup = 'all';
+                this.currentSearchQuery = '';
+
+                const searchInput = document.getElementById('input-drink-search') as HTMLInputElement | null;
+                const clearBtn = document.getElementById('btn-clear-search');
+                if (searchInput) searchInput.value = '';
+                if (clearBtn) clearBtn.style.display = 'none';
+
+                document.querySelectorAll('.cat-pill').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-category-group') === 'all');
+                });
+
+                this.populateDrinkSelect(drink.id);
+                const drinkSelect = document.getElementById('select-drink') as HTMLSelectElement | null;
+                if (drinkSelect) {
+                    drinkSelect.value = drink.id;
+                    if (this.glassDrinkSelect) {
+                        this.glassDrinkSelect.refresh();
+                        this.glassDrinkSelect.updateTriggerLabel();
+                    }
+                    this.populateServingSelect(drink);
+                    this.renderAll();
+                }
+            });
+            chipsContainer.appendChild(chip);
+        });
+    }
+
+    initUI() {
+        // 1. İçecek Listesini ve Hızlı Dok'u Doldur
+        this.populateDrinkSelect();
+        this.renderQuickAddDock();
+
+        // 2. Arama Çubuğu & Kategori Filtre Dinleyicileri
+        const searchInput = document.getElementById('input-drink-search') as HTMLInputElement | null;
+        const clearSearchBtn = document.getElementById('btn-clear-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                this.currentSearchQuery = searchInput.value;
+                if (clearSearchBtn) {
+                    clearSearchBtn.style.display = searchInput.value ? 'flex' : 'none';
+                }
+                this.populateDrinkSelect();
+                this.renderAll();
+            });
+        }
+        if (clearSearchBtn && searchInput) {
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                this.currentSearchQuery = '';
+                clearSearchBtn.style.display = 'none';
+                this.populateDrinkSelect();
+                this.renderAll();
+                searchInput.focus();
+            });
+        }
+
+        const catPills = document.querySelectorAll('.cat-pill');
+        catPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                catPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                const group = (pill.getAttribute('data-category-group') || 'all') as DrinkCategoryGroup;
+                this.currentCategoryGroup = group;
+                this.populateDrinkSelect();
+                this.renderAll();
+            });
+        });
 
         // 3. Kayıtlı Profil Girdilerini Yükle
         const inputWeight = document.getElementById('input-weight') as HTMLInputElement | null;
@@ -906,12 +1043,14 @@ class CircadiaApp {
 
         this.drinkHistory.push(newRecord);
         await this.db.put('history', newRecord);
+        this.renderQuickAddDock();
         this.renderAll();
     }
 
     async deleteDrink(id: number) {
         this.drinkHistory = this.drinkHistory.filter(item => item.id !== id);
         await this.db.delete('history', id);
+        this.renderQuickAddDock();
         this.renderAll();
     }
 
@@ -1162,6 +1301,89 @@ class CircadiaApp {
         if (prevSrcElem) {
             prevSrcElem.textContent = `Kaynak Karşılaştırması ${formatSourceComparison(selectedDrink)}`;
         }
+
+        // Farmakopeik Biyoaktif Profil & Klinik Güvenlik Uyarısı
+        const prevBioBox = document.getElementById('preview-bioactives-box');
+        const prevPrimary = document.getElementById('preview-primary-actives');
+        const prevSecondaryRow = document.getElementById('preview-secondary-row');
+        const prevSecondary = document.getElementById('preview-secondary-actives');
+        const prevExtraRow = document.getElementById('preview-extra-stats-row');
+        const prevSugar = document.getElementById('preview-sugar-badge');
+        const prevEstragol = document.getElementById('preview-estragol-badge');
+        const prevAnthranoid = document.getElementById('preview-anthranoid-badge');
+        const prevThujone = document.getElementById('preview-thujone-badge');
+        const prevClinicAlert = document.getElementById('preview-clinical-alert');
+
+        if (prevBioBox && selectedDrink.bioactives) {
+            prevBioBox.style.display = 'flex';
+            const bio = selectedDrink.bioactives;
+
+            if (prevPrimary) {
+                prevPrimary.textContent = bio.primaryActives;
+            }
+            if (prevSecondaryRow && prevSecondary) {
+                if (bio.secondaryActives) {
+                    prevSecondaryRow.style.display = 'flex';
+                    prevSecondary.textContent = bio.secondaryActives;
+                } else {
+                    prevSecondaryRow.style.display = 'none';
+                }
+            }
+
+            let hasExtra = false;
+            if (prevSugar) {
+                if (bio.sugarG !== undefined && bio.sugarG > 0) {
+                    prevSugar.style.display = 'inline-flex';
+                    prevSugar.textContent = `🍬 ${bio.sugarG} g şeker (${bio.caloriesKcal || 0} kcal)`;
+                    hasExtra = true;
+                } else {
+                    prevSugar.style.display = 'none';
+                }
+            }
+            if (prevEstragol) {
+                if (bio.estragolUg !== undefined && bio.estragolUg > 0) {
+                    prevEstragol.style.display = 'inline-flex';
+                    prevEstragol.textContent = `⚠️ ${bio.estragolUg} µg estragol (EMA sınırı: 50 µg/gün)`;
+                    hasExtra = true;
+                } else {
+                    prevEstragol.style.display = 'none';
+                }
+            }
+            if (prevAnthranoid) {
+                if (bio.anthranoidsMg !== undefined && bio.anthranoidsMg > 0) {
+                    prevAnthranoid.style.display = 'inline-flex';
+                    prevAnthranoid.textContent = `💊 ${bio.anthranoidsMg} mg aktif antranoid (HMPC laksatif doz)`;
+                    hasExtra = true;
+                } else {
+                    prevAnthranoid.style.display = 'none';
+                }
+            }
+            if (prevThujone) {
+                if (bio.thujoneMg !== undefined && bio.thujoneMg > 0) {
+                    prevThujone.style.display = 'inline-flex';
+                    prevThujone.textContent = `⚠️ ${bio.thujoneMg} mg tuyon (EMA nörotoksisite izlemi)`;
+                    hasExtra = true;
+                } else {
+                    prevThujone.style.display = 'none';
+                }
+            }
+
+            if (prevExtraRow) {
+                prevExtraRow.style.display = hasExtra ? 'flex' : 'none';
+            }
+
+            if (prevClinicAlert) {
+                if (bio.clinicalSafetyAlert) {
+                    prevClinicAlert.style.display = 'block';
+                    prevClinicAlert.innerHTML = `<strong>⚠️ Klinik / Farmakope Notu:</strong> ${escapeHtml(bio.clinicalSafetyAlert)}`;
+                } else {
+                    prevClinicAlert.style.display = 'none';
+                }
+            }
+        } else if (prevBioBox) {
+            prevBioBox.style.display = 'none';
+        }
+
         if (prevSingleWarn) {
             const doseCheck = this.tolerance.checkSingleDose(simCaffeine, this.weightKg, isPregnant);
             if (doseCheck.exceedsLimit && doseCheck.message) {
